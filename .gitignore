@@ -1,4 +1,4 @@
-**/__pycache__/*
+**/__pycache__/
 
-deploy/postgresql/data/*
+*deploy/postgresql/data/*
 !deploy/postgresql/data/.gitkeep
