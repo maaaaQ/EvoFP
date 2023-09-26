@@ -20,7 +20,7 @@ def get_db():
 
 # Получить все задачи
 @app.get("/tasks", summary="Возвращает все задачи", response_model=list[Tasks])
-def get_tasks_list(
+async def get_tasks_list(
     db: Session = Depends(get_db), skip: int = 0, limit: int = 100
 ) -> typing.List[Tasks]:
     return crud.get_tasks(db=get_db(), skip=skip, limit=limit)
@@ -28,7 +28,7 @@ def get_tasks_list(
 
 # Получить определенную задачу по ее ID
 @app.get("/tasks/{tasks_id}", summary="Возвращает задачу по ее ID")
-def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks:
+async def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks:
     tasks = crud.get_tasks(db=get_db(), tasks_id=tasks_id)
     if tasks != None:
         return tasks
@@ -39,13 +39,15 @@ def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks:
 @app.post(
     "/tasks", response_model=Tasks, status_code=201, summary="Добавляет задачу в базу"
 )
-def create_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
+async def create_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
     return crud.create_task(db=db, tasks=tasks)
 
 
 # Обновить задачу по ее ID
 @app.put("/tasks/{tasks_id}", summary="Обновляет задачу по ее ID", response_model=Tasks)
-def update_task(tasks_id: int, tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
+async def update_task(
+    tasks_id: int, tasks: TasksOn, db: Session = Depends(get_db)
+) -> Tasks:
     tasks = crud.update_tasks(db=db, tasks_id=tasks_id, tasks=tasks)
     if tasks != None:
         return tasks
@@ -56,7 +58,7 @@ def update_task(tasks_id: int, tasks: TasksOn, db: Session = Depends(get_db)) ->
 @app.delete(
     "/tasks/{tasks_id}", summary="Удаляет задачу по ее ID", response_model=Tasks
 )
-def delete_task_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks:
+async def delete_task_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks:
     if crud.delete_tasks(db=db, tasks_id=tasks_id):
         return HTTPException(status_code=200, detail="Задача успешно удалена")
 
