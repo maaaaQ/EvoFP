@@ -12,8 +12,8 @@ class Tasks(Base):
     title = Column(String, index=True, nullable=False)
     description = Column(String, index=True, nullable=False)
     is_completed = Column(Boolean, default=False, nullable=False)
-    created_at = Column(datetime, default=datetime.utcnow, index=True, nullable=False)
-    updated_at = Column(datetime, default=datetime.utcnow, index=True, nullable=False)
+    created_at = Column(datetime, default=datetime.now, index=True, nullable=False)
+    updated_at = Column(datetime, default=datetime.now, index=True, nullable=False)
 
 
 # Таблица Категорий
@@ -21,8 +21,8 @@ class Categories(Base):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, index=True, nullable=False)
     name = Column(String, index=True, nullable=False)
-    created_at = Column(datetime, default=datetime.utcnow, index=True, nullable=False)
-    updated_at = Column(datetime, default=datetime.utcnow, index=True, nullable=False)
+    created_at = Column(datetime, default=datetime.now, index=True, nullable=False)
+    updated_at = Column(datetime, default=datetime.now, index=True, nullable=False)
 
 
 # СВязь между таблицами задач и категорий

@@ -1,6 +1,7 @@
 import typing
 from sqlalchemy.orm import Session
-from .database import models
+from database import models
+
 
 import schemas
 from schemas.todo import *
