@@ -1,11 +1,11 @@
 import typing
 from fastapi import Depends, FastAPI, HTTPException
-from psycopg2 import OperationalError
 from sqlalchemy.orm import Session
-from .schemas.todo import TasksBase, Tasks, TasksOn, CategoryBase
-from .database import engine, SessionLocal, Base
-from . import crud
+from schemas.todo import Tasks, TasksOn
+from database import engine, SessionLocal, Base
+import crud
 
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ToDoist API")
 

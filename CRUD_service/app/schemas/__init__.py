@@ -1,4 +1,4 @@
-from .todo import TasksBase, CategoryBase
+from .todo import TasksBase, CategoryBase, Tasks, TasksOn
 
 
-__all__ = [TasksBase, CategoryBase]
+__all__ = [TasksBase, CategoryBase, Tasks, TasksOn]

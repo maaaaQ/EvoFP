@@ -1,8 +1,8 @@
 import typing
 from sqlalchemy.orm import Session
 from .database import models
-from . import schemas
-from .schemas.todo import TasksBase, Tasks, TasksOn, CategoryBase
+import schemas
+from schemas.todo import *
 
 
 # Создание новой записи
