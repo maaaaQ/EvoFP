@@ -3,9 +3,9 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 from schemas.todo import Tasks, TasksOn
 from database import engine, SessionLocal, Base
-from . import crud
+import crud
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ToDoist API")
 
