@@ -27,7 +27,7 @@ def get_tasks(
 
 
 # Отображение информации о конкретной задаче
-def get_tasks(db: Session, tasks_id: int) -> models.Tasks:
+def get_tasks_about(db: Session, tasks_id: int) -> models.Tasks:
     return db.query(models.Tasks).filter(models.Tasks.id == tasks_id).first()
 
 
