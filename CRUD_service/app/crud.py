@@ -1,20 +1,17 @@
 import typing
 from sqlalchemy.orm import Session
 from database import models
-
-
 import schemas
-from schemas.todo import *
 
 
 # Создание новой записи
 def create_task(db: Session, tasks: schemas.TasksOn) -> models.Tasks:
     db_tasks = models.Tasks(
-        title=Tasks.title,
-        description=Tasks.description,
-        is_completed=Tasks.is_completed,
-        created_at=Tasks.created_at,
-        updated_at=Tasks.updated_at,
+        title=tasks.title,
+        description=tasks.description,
+        is_completed=tasks.is_completed,
+        created_at=tasks.created_at,
+        updated_at=tasks.updated_at,
     )
     db.add(db_tasks)
     db.commit()
