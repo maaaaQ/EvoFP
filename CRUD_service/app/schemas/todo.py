@@ -3,6 +3,15 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+Def = {
+    "title": "Задача",
+    "description": "Изучение Fast API",
+    "is_completed": False,
+    "created_at": datetime.datetime.now(),
+    "updated_at": datetime.datetime.now(),
+}
+
+
 # Базвоая схема задачи
 class TasksBase(BaseModel):
     title: str = Field(title="Задача")
@@ -10,6 +19,7 @@ class TasksBase(BaseModel):
     is_completed: Optional[bool] = Field(title="Статус задачи")
     created_at: datetime.datetime = Field(title="Дата создания")
     updated_at: datetime.datetime = Field(title="Дата обновления")
+    about: str = Field(title="Идентификатор задачи", default=Def)
 
     class Config:
         orm = True
