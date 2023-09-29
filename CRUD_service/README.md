@@ -10,6 +10,10 @@ tasks/{tasks} | DELETE | Удаляет выбранную задачу
 
 Перед запуском сервиса необходимо установить зависимости из файла requirements.txt
 
+# Путь до исполняемого файла
+
+EvoFP/CRUD_service/app
+
 # Запуск
 
 uvicorn app:app --reload
