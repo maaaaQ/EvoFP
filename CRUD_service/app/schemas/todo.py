@@ -27,7 +27,7 @@ class TasksBase(BaseModel):
 
 # Схема для определния задачи по ее ID
 class Tasks(TasksBase):
-    id: int = Field(title="Идентификатор задачи", default=None, nullable=False)
+    id: int = Field(title="Идентификатор задачи", default=None)
 
 
 # Схема для добавления/обновления задач
