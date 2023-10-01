@@ -6,7 +6,7 @@ from schemas.todo import Tasks, TasksOn
 from database.database import engine, SessionLocal, Base
 import crud
 
-# Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ToDoist API")
 
