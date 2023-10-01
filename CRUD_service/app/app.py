@@ -40,7 +40,7 @@ async def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks
 @app.post(
     "/tasks", status_code=201, summary="Создает новую задачу", response_model=Tasks
 )
-async def create_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
+async def add_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
     tasks = crud.create_task(db, tasks)
     if tasks != None:
         return tasks
