@@ -39,7 +39,7 @@ def update_tasks(db: Session, tasks_id: int, tasks: schemas.TasksOn) -> models.T
     db.commit()
 
     if result == 1:
-        return get_tasks(db, tasks_id)
+        return get_tasks_about(db, tasks_id)
     return None
 
 
