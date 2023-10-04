@@ -1,7 +1,7 @@
 import typing
 from sqlalchemy.orm import Session
-from database import models
-import schemas
+from .database import models
+from . import schemas
 
 
 # Создание новой записи

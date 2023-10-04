@@ -14,7 +14,7 @@
 
 # Путь до исполняемого файла
 
-EvoFP/CRUD_service/app
+EvoFP/CRUD_service
 
 # Запуск
 

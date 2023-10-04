@@ -2,11 +2,11 @@ import typing
 from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from database import DB_INITIALIZER
-from schemas.todo import Tasks, TasksOn
+from .database import DB_INITIALIZER
+from .schemas import Tasks, TasksOn
 
 
-import crud, config
+from . import crud, config
 import logging
 from fastapi.logger import logger
 
