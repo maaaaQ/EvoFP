@@ -2,3 +2,5 @@
 
 deploy/postgresql/data/*
 !deploy/postgresql/data/.gitkeep
+
+*.env

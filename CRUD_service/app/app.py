@@ -2,11 +2,30 @@ import typing
 from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from database import DB_INITIALIZER
 from schemas.todo import Tasks, TasksOn
-from database.database import engine, SessionLocal, Base
-import crud
 
-Base.metadata.create_all(bind=engine)
+
+import crud, config
+import logging
+from fastapi.logger import logger
+
+# Настройка журнала для сообщений о событиях
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=2, format="%(levelname)-9s %(message)s")
+
+
+cfg: config.Config = config.load_config()
+
+# Загрузка конфигурации
+logger.info(
+    "Service configuration loaded:\n"
+    + f"{cfg.model_dump_json(by_alias=True, indent=4)}"
+)
+
+# Инициализация базы данных
+logger.info("Initializing database...")
+SessionLocal = DB_INITIALIZER.init_database(str(cfg.postgres_dsn))
 
 app = FastAPI(title="ToDoist API")
 
