@@ -1,6 +1,6 @@
 import datetime
 from uuid import UUID
-
+from app.enums import FilterPriority, FilterCompleted
 from pydantic import BaseModel, Field
 
 
@@ -8,17 +8,11 @@ from pydantic import BaseModel, Field
 class TasksBase(BaseModel):
     title: str = Field(title="Задача")
     description: str = Field(title="Описание")
-    priority: int = Field(
-        title="Приоритет задачи",
-        description="Выбери приоритет задачи: 0 - низкий, 1 - высокий",
-        ge=0,
-        le=1,
-        default=0,
+    priority: FilterPriority = Field(
+        title="Приоритет задачи", default=FilterPriority.low
     )
-    is_completed: bool = Field(
-        title="Статус задачи",
-        description="Выбери статус задачи:true - выполнена, false - в процессе",
-        default=False,
+    is_completed: FilterCompleted = Field(
+        title="Статус задачи", default=FilterCompleted.not_completed
     )
     created_at: datetime.datetime = Field(title="Дата создания")
     updated_at: datetime.datetime = Field(title="Дата обновления")

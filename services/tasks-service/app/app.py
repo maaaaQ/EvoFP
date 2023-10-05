@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from .database import DB_INITIALIZER
 from .schemas import Tasks, TasksOn
-
+from .enums import FilterPriority, FilterCompleted
 
 from . import crud, config
 import logging
@@ -44,8 +44,8 @@ async def get_tasks_list(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
-    priority: int = Query(None),
-    is_completed: bool = Query(None),
+    priority: FilterPriority | None = None,
+    is_completed: FilterCompleted | None = None,
 ) -> typing.List[Tasks]:
     return crud.get_tasks(db, skip, limit, priority, is_completed)
 

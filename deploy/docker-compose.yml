@@ -18,7 +18,7 @@ services:
       PGDATA: /var/lib/postgresql/data/db-files/
     ports:
       - 5432:5432
-  crud_service:
+  tasks_service:
     image: tasks-service:crud
     ports:
       - "5000:5000"

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from .database import models
 from . import schemas
 from fastapi import Query
+from .enums import FilterPriority, FilterCompleted
 
 
 # Создание новой записи
@@ -27,18 +28,14 @@ def get_tasks(
     db: Session,
     skip: int = 0,
     limit: int = 100,
-    priority: int = Query(None),
-    is_completed: bool = Query(None),
+    priority: FilterPriority | None = None,
+    is_completed: FilterCompleted | None = None,
 ) -> typing.List[models.Tasks]:
     query = db.query(models.Tasks)
-    if priority != None and is_completed != None:
-        return query.filter(models.Tasks.priority == priority).filter(
-            models.Tasks.is_completed == is_completed
-        )
-    if priority != None:
-        return query.filter(models.Tasks.priority == priority)
-    if is_completed != None:
-        return query.filter(models.Tasks.is_completed == is_completed)
+    if priority:
+        query = query.filter(models.Tasks.priority == priority)
+    if is_completed:
+        query = query.filter(models.Tasks.is_completed == is_completed)
     return query.offset(skip).limit(limit).all()
 
 
