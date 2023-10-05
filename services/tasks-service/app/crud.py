@@ -33,9 +33,9 @@ def get_tasks(
 ) -> typing.List[models.Tasks]:
     query = db.query(models.Tasks)
     if priority:
-        query = query.filter(models.Tasks.priority == priority)
+        return query.filter(models.Tasks.priority == FilterPriority(priority))
     if is_completed:
-        query = query.filter(models.Tasks.is_completed == is_completed)
+        return query.filter(models.Tasks.is_completed == FilterCompleted(is_completed))
     return query.offset(skip).limit(limit).all()
 
 
