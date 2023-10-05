@@ -4,7 +4,7 @@
 
 ---
 
-docker-compose -p home-automation up -d
+docker-compose -p deploy up -d
 
 ---
 

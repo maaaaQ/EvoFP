@@ -28,7 +28,7 @@ uvicorn app:app --reload
 
 ---
 
-docker build -t task-service:crud .
+docker build -t tasks-service:crud .
 
 ---
 
