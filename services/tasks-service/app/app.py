@@ -1,5 +1,5 @@
 import typing
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from .database import DB_INITIALIZER
@@ -41,9 +41,13 @@ def get_db():
 # Получить все задачи
 @app.get("/tasks", summary="Возвращает все задачи", response_model=list[Tasks])
 async def get_tasks_list(
-    db: Session = Depends(get_db), skip: int = 0, limit: int = 100
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+    priority: int = Query(None),
+    is_completed: bool = Query(None),
 ) -> typing.List[Tasks]:
-    return crud.get_tasks(db, skip, limit)
+    return crud.get_tasks(db, skip, limit, priority, is_completed)
 
 
 # Получить определенную задачу по ее ID
@@ -57,7 +61,7 @@ async def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks
 
 # Создать новую задачу
 @app.post(
-    "/tasks", status_code=201, summary="Создает новую задачу", response_model=Tasks
+    "/task", status_code=201, summary="Создает новую задачу", response_model=Tasks
 )
 async def add_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
     tasks = crud.create_task(db, tasks)

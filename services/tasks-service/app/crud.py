@@ -2,6 +2,7 @@ import typing
 from sqlalchemy.orm import Session
 from .database import models
 from . import schemas
+from fastapi import Query
 
 
 # Создание новой записи
@@ -9,9 +10,11 @@ def create_task(db: Session, tasks: schemas.TasksOn) -> models.Tasks:
     db_tasks = models.Tasks(
         title=tasks.title,
         description=tasks.description,
+        priority=tasks.priority,
         is_completed=tasks.is_completed,
         created_at=tasks.created_at,
         updated_at=tasks.updated_at,
+        user_id=tasks.user_id,
     )
     db.add(db_tasks)
     db.commit()
@@ -21,9 +24,22 @@ def create_task(db: Session, tasks: schemas.TasksOn) -> models.Tasks:
 
 # Отображение информации о всех задачах
 def get_tasks(
-    db: Session, skip: int = 0, limit: int = 100
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    priority: int = Query(None),
+    is_completed: bool = Query(None),
 ) -> typing.List[models.Tasks]:
-    return db.query(models.Tasks).offset(skip).limit(limit).all()
+    query = db.query(models.Tasks)
+    if priority != None and is_completed != None:
+        return query.filter(models.Tasks.priority == priority).filter(
+            models.Tasks.is_completed == is_completed
+        )
+    if priority != None:
+        return query.filter(models.Tasks.priority == priority)
+    if is_completed != None:
+        return query.filter(models.Tasks.is_completed == is_completed)
+    return query.offset(skip).limit(limit).all()
 
 
 # Отображение информации о конкретной задаче
@@ -31,7 +47,7 @@ def get_tasks_about(db: Session, tasks_id: int) -> models.Tasks:
     return db.query(models.Tasks).filter(models.Tasks.id == tasks_id).first()
 
 
-# Обновление информации об устройстве
+# Обновление информации о задачи
 def update_tasks(db: Session, tasks_id: int, tasks: schemas.TasksOn) -> models.Tasks:
     result = (
         db.query(models.Tasks).filter(models.Tasks.id == tasks_id).update(tasks.dict())
@@ -43,7 +59,7 @@ def update_tasks(db: Session, tasks_id: int, tasks: schemas.TasksOn) -> models.T
     return None
 
 
-# Удаление записи
+# Удаление задачи
 def delete_tasks(db: Session, tasks_id: int) -> bool:
     result = db.query(models.Tasks).filter(models.Tasks.id == tasks_id).delete()
     db.commit()

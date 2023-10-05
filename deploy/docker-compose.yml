@@ -14,7 +14,13 @@ services:
     environment:
       POSTGRES_PASSWORD: postgresql7
       POSTGRES_USER: postgres
-      POSTGRES_DB: postgreSQL
+      POSTGRES_DB: postgres
       PGDATA: /var/lib/postgresql/data/db-files/
     ports:
       - 5432:5432
+  crud_service:
+    image: tasks-service:crud
+    ports:
+      - "5000:5000"
+    environment:
+      POSTGRES_DSN: postgresql://postgres:postgresql7@postgresql:5432/postgres
