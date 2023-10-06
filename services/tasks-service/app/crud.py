@@ -32,6 +32,10 @@ def get_tasks(
     is_completed: FilterCompleted | None = None,
 ) -> typing.List[models.Tasks]:
     query = db.query(models.Tasks)
+    if priority and is_completed:
+        return query.filter(models.Tasks.priority == FilterPriority(priority)).filter(
+            models.Tasks.is_completed == FilterCompleted(is_completed)
+        )
     if priority:
         return query.filter(models.Tasks.priority == FilterPriority(priority))
     if is_completed:
