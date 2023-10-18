@@ -34,3 +34,11 @@ services:
       POSTGRES_DSN: postgresql://postgres:postgresql7@postgresql:5432/postgres
     depends_on:
       - postgresql
+  user_service:
+    image: user-service:user
+    ports:
+      - "3000:3000"
+    environment:
+      POSTGRES_DSN: postgresql+asyncpg://postgres:postgresql7@postgresql:5432/postgres
+    depends_on:
+      - postgresql
