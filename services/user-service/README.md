@@ -1,6 +1,6 @@
 # API сервиса управления пользователями
 
-Реализован на основе фреймворка [fastapi-users] (https://fastapi-users.github.io/fastapi-users/10.1/)
+Реализован на основе фреймворка [fastapi-users](https://fastapi-users.github.io/fastapi-users/10.1/)
 
 # Зависимости
 
