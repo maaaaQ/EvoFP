@@ -28,6 +28,7 @@ users.include_routers(app)
     status_code=201,
     response_model=users.schemas.GroupRead,
     summary="Создает новую группу пользователей",
+    tags=["user-groups"],
 )
 async def add_group(
     group: users.schemas.GroupCreate,
@@ -40,6 +41,7 @@ async def add_group(
     "/groups",
     summary="Возвращает список групп пользователей",
     response_model=list[users.schemas.GroupRead],
+    tags=["user-groups"],
 )
 async def get_group_list(
     session: AsyncSession = Depends(users.models.get_async_session),
@@ -50,7 +52,9 @@ async def get_group_list(
 
 
 @app.get(
-    "/groups/{group_id}", summary="Возвращает информацию о группе пользователей по ID"
+    "/groups/{group_id}",
+    summary="Возвращает информацию о группе пользователей по ID",
+    tags=["user-groups"],
 )
 async def get_group_info(
     group_id: int, session: AsyncSession = Depends(users.models.get_async_session)
@@ -62,7 +66,9 @@ async def get_group_info(
 
 
 @app.put(
-    "/groups/{group_id}", summary="Обновляет информацию о группе пользователей по ID"
+    "/groups/{group_id}",
+    summary="Обновляет информацию о группе пользователей по ID",
+    tags=["user-groups"],
 )
 async def update_group(
     group_id: int,
@@ -76,7 +82,9 @@ async def update_group(
 
 
 @app.delete(
-    "/groups/{group_id}", summary="Удаляет информацию о группе пользователей по ID"
+    "/groups/{group_id}",
+    summary="Удаляет информацию о группе пользователей по ID",
+    tags=["user-groups"],
 )
 async def delete_device(
     group_id: int, session: AsyncSession = Depends(users.models.get_async_session)

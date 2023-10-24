@@ -39,7 +39,12 @@ def get_db():
 
 
 # Получить все задачи
-@app.get("/tasks", summary="Возвращает все задачи", response_model=list[Tasks])
+@app.get(
+    "/tasks",
+    summary="Возвращает все задачи",
+    response_model=list[Tasks],
+    tags=["tasks"],
+)
 async def get_tasks_list(
     db: Session = Depends(get_db),
     skip: int = 0,
@@ -51,7 +56,7 @@ async def get_tasks_list(
 
 
 # Получить определенную задачу по ее ID
-@app.get("/tasks/{tasks_id}", summary="Возвращает задачу по ее ID")
+@app.get("/tasks/{tasks_id}", summary="Возвращает задачу по ее ID", tags=["tasks"])
 async def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks:
     tasks = crud.get_tasks_about(db, tasks_id)
     if tasks != None:
@@ -61,7 +66,11 @@ async def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks
 
 # Создать новую задачу
 @app.post(
-    "/task", status_code=201, summary="Создает новую задачу", response_model=Tasks
+    "/task",
+    status_code=201,
+    summary="Создает новую задачу",
+    response_model=Tasks,
+    tags=["tasks"],
 )
 async def add_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
     tasks = crud.create_task(db, tasks)
@@ -71,7 +80,7 @@ async def add_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
 
 
 # Обновить задачу по ее ID
-@app.put("/tasks/{tasks_id}", summary="Обновляет задачу по ее ID")
+@app.put("/tasks/{tasks_id}", summary="Обновляет задачу по ее ID", tags=["tasks"])
 async def update_task(
     tasks_id: int, tasks: TasksOn, db: Session = Depends(get_db)
 ) -> Tasks:
@@ -82,7 +91,7 @@ async def update_task(
 
 
 # Удалить задачу по ее ID
-@app.delete("/tasks/{tasks_id}", summary="Удаляет задачу по ее ID")
+@app.delete("/tasks/{tasks_id}", summary="Удаляет задачу по ее ID", tags=["tasks"])
 async def delete_task_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks:
     if crud.delete_tasks(db, tasks_id):
         return JSONResponse(

@@ -5,6 +5,12 @@ volumes:
       o: bind
       type: none
       device: ./postgresql/data
+  policy-enforcement-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./policy-enforcement-service
 services:
   postgresql:
     image: postgres:15
@@ -18,27 +24,59 @@ services:
       PGDATA: /var/lib/postgresql/data/db-files/
     ports:
       - 5432:5432
-  tasks_service:
-    image: tasks-service:crud
+  policy-enforcement-service:
+    container_name: policy-enforcement-service
+    build:
+      context: ../services/policy-enforcement-service
+      dockerfile: ./Dockerfile
     ports:
       - "5000:5000"
+    volumes:
+      - policy-enforcement-data:/mnt/
     environment:
-      POSTGRES_DSN: postgresql://postgres:postgresql7@postgresql:5432/postgres
+      JWT_SECRET:
+      POLICIES_CONFIG_PATH:
+    env_file:
+      - .env
+  tasks_service:
+    container_name: tasks-service
+    build:
+      context: ../services/tasks-service
+      dockerfile: ./Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      POSTGRES_DSN:
     depends_on:
       - postgresql
+    env_file:
+      - .env
   comment_service:
-    image: comment-service:comm
+    container_name: comment-service
+    build:
+      context: ../services/comment-service
+      dockerfile: ./Dockerfile
     ports:
-      - "4000:4000"
+      - "5002:5000"
     environment:
-      POSTGRES_DSN: postgresql://postgres:postgresql7@postgresql:5432/postgres
+      POSTGRES_DSN:
+    env_file:
+      - .env
     depends_on:
       - postgresql
   user_service:
-    image: user-service:user
+    container_name: user-service
+    build:
+      context: ../services/user-service
+      dockerfile: ./Dockerfile
     ports:
-      - "3000:3000"
+      - "5003:5000"
     environment:
-      POSTGRES_DSN: postgresql+asyncpg://postgres:postgresql7@postgresql:5432/postgres
+      POSTGRES_DSN: ${POSTGRES_DSN_ASYNC}
+      JWT_SECRET:
+      RESET_PASSWORD_TOKEN_SECRET:
+      VERIFICATION_TOKEN_SECRET:
+    env_file:
+      - .env
     depends_on:
       - postgresql

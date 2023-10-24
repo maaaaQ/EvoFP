@@ -28,7 +28,7 @@ docker-compose stop
 
 ---
 
-http://127.0.0.1:5000/docs
+http://127.0.0.1:5001/docs
 
 ---
 
@@ -36,6 +36,22 @@ http://127.0.0.1:5000/docs
 
 ---
 
-http://127.0.0.1:4000/docs
+http://127.0.0.1:5002/docs
+
+---
+
+# user-service доступен по адресу
+
+---
+
+http://127.0.0.1:5003/docs
+
+---
+
+# policy-enforcement-service доступен по адресу
+
+---
+
+http://127.0.0.1:5000/docs
 
 ---

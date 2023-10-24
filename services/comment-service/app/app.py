@@ -43,6 +43,7 @@ def get_db():
     status_code=201,
     summary="Создает новый комментарий",
     response_model=Comments,
+    tags=["comments"],
 )
 async def add_comment(
     comments: CommentsCreate,
@@ -63,6 +64,7 @@ async def add_comment(
     "/comments",
     summary="Возвращает все комментарии",
     response_model=list[Comments],
+    tags=["comments"],
 )
 async def get_comments_list(
     db: Session = Depends(get_db),
@@ -74,7 +76,11 @@ async def get_comments_list(
 
 
 # Получить определенный комментарий по ID
-@app.get("/comments/{comments_id}", summary="Возвращает комментарий по ID")
+@app.get(
+    "/comments/{comments_id}",
+    summary="Возвращает комментарий по ID",
+    tags=["comments"],
+)
 async def get_comments_by_id(
     tasks_id: int, comments_id: int, db: Session = Depends(get_db)
 ) -> Comments:
@@ -85,7 +91,11 @@ async def get_comments_by_id(
 
 
 # Обновить определенный комментарий
-@app.put("/comments/{comments_id}", summary="Обновляет комментарий по ID")
+@app.put(
+    "/comments/{comments_id}",
+    summary="Обновляет комментарий по ID",
+    tags=["comments"],
+)
 async def update_comment(
     comments_id: int,
     comments: CommentsUpdate,
@@ -98,7 +108,11 @@ async def update_comment(
 
 
 # Удалить определенный комментарий
-@app.delete("/comments/{comments_id}", summary="Удаляет комментарий по ID")
+@app.delete(
+    "/comments/{comments_id}",
+    summary="Удаляет комментарий по ID",
+    tags=["comments"],
+)
 async def delete_comment(
     tasks_id: int, comments_id: int, db: Session = Depends(get_db)
 ) -> Comments:
