@@ -31,11 +31,3 @@ uvicorn src:app --reload
 # Документация
 
 После запуска доступна документация: http://127.0.0.1:8000/docs
-
-# Сборка образа
-
----
-
-docker build -t policy-enforcement-service:policy .
-
----
