@@ -25,32 +25,26 @@ policies:
     rule: r.sub.is_active == true
     resource: /task
     methods: (POST)
-    white_list: true
   - service: tasks-service
     rule: r.sub.is_active == true
     resource: /tasks
     methods: (GET)
-    white_list: true
   - service: tasks-service
     rule: r.sub.is_active == true
     resource: /tasks/*
     methods: (GET)|(PUT)|(DELETE)
-    white_list: true
   - service: comment-service
     rule: r.sub.is_active == true && r.sub.is_verified == true
     resource: /comments/*
     methods: (GET)|(POST)
-    white_list: true
   - service: comment-service
     rule: r.sub.group_id == 1
     resource: /comments/*
     methods: (GET)|(POST)|(PUT)|(DELETE)
-    white_list: true
   - service: user-service
     rule: r.sub.group_id == 1
     resource: /groups*
     methods: (GET)|(POST)|(PUT)|(DELETE)
-    white_list: true
   - service: user-service
     resource: /auth/*
     methods: (POST)
@@ -59,9 +53,7 @@ policies:
     rule: r.sub.group_id == 2
     resource: /users/me
     methods: (GET)|(PATCH)
-    white_list: true
   - service: user-service
     rule: r.sub.group_id == 1
     resource: /users/*
     methods: (GET)|(PATCH)|(DELETE)
-    white_list: true
