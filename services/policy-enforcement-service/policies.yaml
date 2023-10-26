@@ -21,22 +21,22 @@ model: |
   m = eval(p.sub_rule) && keyMatch(r.obj, p.obj) && regexMatch(r.act, p.act)
 policies:
   - service: tasks-service
-    rule: r.sub.is_active == true
+    rule: r.sub.group_id > 0
     resource: /task
     methods: (POST)
   - service: tasks-service
-    rule: r.sub.is_active == true
+    rule: r.sub.group_id > 0
     resource: /tasks
     methods: (GET)
+  - service: tasks-service
+    rule: r.sub.group_id > 0
+    resource: /tasks/*
+    methods: (GET)|(PUT)|(DELETE)
   - service: comment-service
-    rule: r.sub.is_active == true
-    resource: /comments/*
+    rule: r.sub.group_id > 0
+    resource: /comments
     methods: (GET)|(POST)
   - service: user-service
     resource: /auth/*
     methods: (POST)
-    white_list: true
-  - service: user-service
-    resource: /users/me
-    methods: (GET)|(PATCH)
     white_list: true
