@@ -51,10 +51,20 @@ app = App()
 async def catch_all(request: Request, path_name: str):
     enforce_result: EnforceResult = policy_checker.enforce(request)
     if not enforce_result.access_allowed:
+        logger.info(
+            "The user does not have enough permissions. A blocked route: %s", path_name
+        )
         return JSONResponse(content={"message": "Content not found"}, status_code=404)
 
-    print(enforce_result.redirect_service, path_name)
+    logger.info(
+        "The request will be redirected along the route: %s%s",
+        enforce_result.redirect_service,
+        path_name,
+    )
+    return await redirect_user_request(request, enforce_result)
 
+
+async def redirect_user_request(request: Request, enforce_result: EnforceResult):
     client = httpx.AsyncClient(base_url=enforce_result.redirect_service)
     url = httpx.URL(path=request.url.path, query=request.url.query.encode("utf-8"))
     rp_req = client.build_request(

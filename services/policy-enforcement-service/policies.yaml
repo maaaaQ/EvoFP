@@ -7,6 +7,7 @@ services:
     inject_token_in_swagger: True
   - name: user-service
     entrypoint: http://127.0.0.1:8000/
+    inject_token_in_swagger: True
 model: |
   [request_definition]
   r = sub, obj, act
