@@ -27,7 +27,7 @@ class EmailNotificationConsumer(ConsumerMixin):
         message.ack()
 
     def handle_email_notification():
-        with Connection(Config.rabbitmq_url) as conn:
+        with Connection(Config.rabbitmq) as conn:
             consumer = EmailNotificationConsumer(conn)
             consumer.run()
 

@@ -18,7 +18,3 @@ def send_email_notification(subject: str, body: str, email_to: EmailStr):
                 exchange=email_exchange,
                 routing_key="email",
             )
-
-
-if __name__ == "__main__":
-    handle_email_notification()
