@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import EmailStr
 from .config import Config
 from kombu import Connection, Exchange, Queue
-from email_templates import handle_email_notification
+from .email_templates import handle_email_notification
 
 app = FastAPI()
 
