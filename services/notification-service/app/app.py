@@ -1,7 +1,10 @@
 from kombu import Connection, Exchange, Producer, Queue
-from .message_processing import process_message
-from .config import Config
+from message_processing import process_message
+from config import Config
 from kombu.utils import retry
+from smtplib import SMTP
+from email.mime.text import MIMEText
+from email.header import Header
 
 
 rabbitmq_url = "amqp://guest:guest@localhost:5672//"
@@ -18,11 +21,6 @@ with Connection(rabbitmq_url) as connection:
     def send_notification(body, email_to, message_properties):
         email_subject = "Уведомление"
         email_body = body.decode("utf-8")
-
-        # Отправка письма через SMTP
-        from smtplib import SMTP
-        from email.mime.text import MIMEText
-        from email.header import Header
 
         message = MIMEText(email_body, "plain", "utf-8")
         message["Subject"] = Header(email_subject, "utf-8")

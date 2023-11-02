@@ -1,4 +1,4 @@
-from .config import Config
+from config import Config
 import smtplib
 from kombu import Connection, Exchange, Queue
 
@@ -24,7 +24,7 @@ def process_message(body, message):
     message.ack()
 
 
-connection = Connection("amqp://guest:guest@localhost:5672/")
+connection = Connection("amqp://guest:guest@localhost:5672//")
 
 
 exchange = Exchange("my_exchange", type="direct")
