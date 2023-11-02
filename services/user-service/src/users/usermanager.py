@@ -5,6 +5,7 @@ from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, UUIDIDMixin, models, schemas, exceptions
 
 from src.users import models, secretprovider
+from kombu import Connection, Exchange, Queue
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
@@ -12,6 +13,24 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         self, user: models.User, request: Optional[Request] = None
     ):
         print(f"User {user.id} has registered.")
+
+        with Connection("amqp://guest:guest@rabbitmq:5672/") as connection:
+            queue = Queue(
+                "user_registered", Exchange("registered"), routing_key="user.registered"
+            )
+            message = {
+                "id": str(user.id),
+                "email": user.email,
+                "nickname": user.nickname,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            }
+        with connection.Producer() as producer:
+            producer.publish(
+                message,
+                exchange=queue.exchange,
+                routing_key=queue.routing_key,
+            )
 
     async def create(
         self,

@@ -12,6 +12,11 @@ volumes:
       type: none
       device: ./policy-enforcement-service
 services:
+  rabbitmq:
+    image: rabbitmq:latest
+    ports:
+      - 5672:5672
+      - 15672:15672
   postgresql:
     image: postgres:15
     restart: always

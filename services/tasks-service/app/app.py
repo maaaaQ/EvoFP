@@ -9,6 +9,7 @@ from .enums import FilterPriority, FilterCompleted
 from . import crud, config
 import logging
 from fastapi.logger import logger
+from kombu import Connection, Exchange, Queue
 
 # Настройка журнала для сообщений о событиях
 logger = logging.getLogger(__name__)
@@ -75,6 +76,18 @@ async def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks
 async def add_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
     tasks = crud.create_task(db, tasks)
     if tasks != None:
+        with Connection("amqp://guest:guest@rabbitmq:5672/") as connection:
+            queue = Queue("task_created", Exchange("tasks"), routing_key="task.created")
+            message = {
+                "id": tasks.id,
+                "title": tasks.title,
+                "prioriry": tasks.priority,
+                "user_id": tasks.user_id,
+            }
+        with connection.Producer() as producer:
+            producer.publish(
+                message, exchange=queue.exchange, routing_key=queue.routing_key
+            )
         return tasks
     return JSONResponse(status_code=404, content={"message": "Задача не создана"})
 

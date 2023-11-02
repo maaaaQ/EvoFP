@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from .database import DB_INITIALIZER
 from .schemas import CommentsCreate, CommentsUpdate, Comments
-
+from kombu import Connection, Exchange, Queue
 
 from . import crud, config
 
@@ -55,6 +55,20 @@ async def add_comment(
         )
     comments = crud.create_comment(db, comments)
     if comments:
+        with Connection("amqp://guest:guest@rabbitmq:5672/") as connection:
+            queue = Queue(
+                "comment_created", Exchange("comments"), routing_key="comment.created"
+            )
+            message = {
+                "id": comments.id,
+                "text": comments.text,
+                "task_id": comments.task_id,
+                "user_id": comments.user_id,
+            }
+        with connection.Producer() as producer:
+            producer.publish(
+                message, exchange=queue.exchange, routing_key=queue.routing_key
+            )
         return comments
     return JSONResponse(status_code=404, content={"message": "Комментарий не создан"})
 

@@ -29,7 +29,7 @@ class Config(BaseSettings):
     )
 
     rabbitmq: str = Field(
-        default="amqp://guest1:guest1@localhost:5675//",
+        default="amqp://guest:guest@localhost:5672//",
         env="RABBIT",
         alias="RABBIT",
     )
@@ -39,14 +39,10 @@ class Config(BaseSettings):
         extra = "allow"
 
 
-# def load_config() -> Config:
-#     app_config: Config = Config()
-#     logger.info(
-#         "Service configuration loaded:\n"
-#         + f"{app_config.model_dump_json(by_alias=True, indent=4)}"
-#     )
-#     return app_config
-
-
 def load_config() -> Config:
-    return Config()
+    app_config: Config = Config()
+    logger.info(
+        "Service configuration loaded:\n"
+        + f"{app_config.model_dump_json(by_alias=True, indent=4)}"
+    )
+    return app_config
