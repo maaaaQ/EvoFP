@@ -13,7 +13,9 @@ volumes:
       device: ./policy-enforcement-service
 services:
   rabbitmq:
-    image: rabbitmq:latest
+    container_name: rabbitmq
+    hostname: rabbitmq
+    image: rabbitmq:3.12.8-management-alpine
     ports:
       - 5672:5672
       - 15672:15672
@@ -93,10 +95,12 @@ services:
     ports:
       - "5004:5000"
     environment:
-      SMTP_HOST:
-      SMTP_PORT:
-      SMTP_USER:
-      SMTP_PASS:
-      RABBIT:
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      RABBIT: ${RABBIT}
     env_file:
       - .env
+    depends_on:
+      - rabbitmq

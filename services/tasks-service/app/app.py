@@ -76,12 +76,12 @@ async def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks
 async def add_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
     tasks = crud.create_task(db, tasks)
     if tasks != None:
-        with Connection("amqp://guest:guest@rabbitmq:5672/") as connection:
+        with Connection(cfg.rabbitmq) as connection:
             queue = Queue("task_created", Exchange("tasks"), routing_key="task.created")
             message = {
                 "id": tasks.id,
                 "title": tasks.title,
-                "prioriry": tasks.priority,
+                "priority": tasks.priority,
                 "user_id": tasks.user_id,
             }
         with connection.Producer() as producer:

@@ -13,6 +13,12 @@ class Config(BaseSettings):
 
     bool_example: bool = Field(default=False, env="BOOL_EXAMPLE", alias="BOOL_EXAMPLE")
 
+    rabbitmq: str = Field(
+        default="amqp://guest:guest@localhost:5672//",
+        env="RABBIT",
+        alias="RABBIT",
+    )
+
     class Config:
         env_file = ".env"
 

@@ -6,6 +6,7 @@ from fastapi_users import BaseUserManager, UUIDIDMixin, models, schemas, excepti
 
 from src.users import models, secretprovider
 from kombu import Connection, Exchange, Queue
+from .. import config
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
@@ -14,7 +15,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
     ):
         print(f"User {user.id} has registered.")
 
-        with Connection("amqp://guest:guest@rabbitmq:5672/") as connection:
+        with Connection(config.Config.rabbitmq) as connection:
             queue = Queue(
                 "user_registered", Exchange("registered"), routing_key="user.registered"
             )

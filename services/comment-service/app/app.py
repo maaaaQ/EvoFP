@@ -55,7 +55,7 @@ async def add_comment(
         )
     comments = crud.create_comment(db, comments)
     if comments:
-        with Connection("amqp://guest:guest@rabbitmq:5672/") as connection:
+        with Connection(cfg.rabbitmq) as connection:
             queue = Queue(
                 "comment_created", Exchange("comments"), routing_key="comment.created"
             )

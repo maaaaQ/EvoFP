@@ -1,20 +1,38 @@
 from kombu import Connection, Exchange, Producer, Queue
-from .config import Config
-from smtplib import SMTP
+from . import config
+import smtplib
 from email.mime.text import MIMEText
 from kombu.mixins import ConsumerMixin
+import logging
+from fastapi.logger import logger
+from fastapi import FastAPI
+import threading
+
+app = FastAPI()
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
-def send_email(email_to, subject, message):
+cfg: config.Config = config.load_config()
+
+# Загрузка конфигурации
+logger.info(
+    "Notification Service configuration loaded:\n"
+    + f"{cfg.model_dump_json(by_alias=True, indent=4)}"
+)
+
+
+def send_email(receiver_email, subject, message):
     msg = MIMEText(message)
     msg["Subject"] = subject
-    msg["From"] = Config.smtp_user
-    msg["To"] = email_to
+    msg["From"] = cfg.smtp_user
+    msg["To"] = receiver_email
 
-    with SMTP(Config.smtp_host, Config.smtp_port) as server:
-        server.starttls()
-        server.login(Config.smtp_user, Config.smtp_pass)
-        server.sendmail(Config.smtp_user, email_to, msg.as_string())
+    with smtplib.SMTP_SSL(cfg.smtp_host, cfg.smtp_port) as server:
+        server.login(cfg.smtp_user, cfg.smtp_pass)
+        server.sendmail(cfg.smtp_user, receiver_email, msg.as_string())
+        server.quit()
 
 
 class QueueConsumer(ConsumerMixin):
@@ -28,7 +46,7 @@ class QueueConsumer(ConsumerMixin):
     def process_message(self, body, message):
         if self.queue_name == "task_created":
             email_subject = "Задача создана"
-            email_message = f"Новая задача создана с ID {body['id']}.\n Имя задачи: {body['title']}\n Приоритет: {body['prioriry']}\n Пользователь: {body['user_id']}"
+            email_message = f"Новая задача создана с ID {body['id']}.\n Имя задачи: {body['title']}\n Приоритет: {body['priority']}\n Пользователь: {body['user_id']}"
             send_email(
                 receiver_email=body["email"],
                 subject=email_subject,
@@ -55,7 +73,7 @@ class QueueConsumer(ConsumerMixin):
 
 
 def monitor_queues():
-    with Connection("amqp://guest:guest@127.0.0.1:15672/#/") as connection:
+    with Connection(cfg.rabbitmq) as connection:
         with connection.channel() as channel:
             task_created_queue = Queue(
                 "task_created", Exchange("tasks"), routing_key="task.created"
@@ -76,4 +94,9 @@ def monitor_queues():
             comment_created_consumer.run()
 
 
-monitor_queues()
+def start_monitoring():
+    monitor_queues()
+
+
+thread = threading.Thread(target=start_monitoring)
+thread.start()

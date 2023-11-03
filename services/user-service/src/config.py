@@ -29,6 +29,12 @@ class Config(BaseSettings):
         alias="VERIFICATION_TOKEN_SECRET",
     )
 
+    rabbitmq: str = Field(
+        default="amqp://guest:guest@localhost:5672//",
+        env="RABBIT",
+        alias="RABBIT",
+    )
+
     class Config:
         env_file = ".env"
         extra = "allow"
