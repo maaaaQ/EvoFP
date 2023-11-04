@@ -1,4 +1,4 @@
-from pydantic import PostgresDsn, Field
+from pydantic import PostgresDsn, Field, AmqpDsn
 from pydantic_settings import BaseSettings
 import logging
 
@@ -28,7 +28,7 @@ class Config(BaseSettings):
         alias="SMTP_PASS",
     )
 
-    rabbitmq: str = Field(
+    rabbitmq: AmqpDsn = Field(
         default="amqp://guest:guest@localhost:5672/",
         env="RABBIT",
         alias="RABBIT",
