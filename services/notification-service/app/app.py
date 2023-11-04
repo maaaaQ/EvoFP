@@ -6,7 +6,7 @@ from kombu.mixins import ConsumerMixin
 import logging
 from fastapi.logger import logger
 from fastapi import FastAPI
-import threading
+import multiprocessing
 
 app = FastAPI()
 
@@ -98,5 +98,6 @@ def start_monitoring():
     monitor_queues()
 
 
-thread = threading.Thread(target=start_monitoring)
-thread.start()
+if __name__ == "__main__":
+    process = multiprocessing.Process(target=start_monitoring)
+    process.start()
