@@ -98,6 +98,5 @@ def start_monitoring():
     monitor_queues()
 
 
-if __name__ == "__main__":
-    process = multiprocessing.Process(target=start_monitoring)
-    process.start()
+process = multiprocessing.Process(target=start_monitoring)
+process.start()
