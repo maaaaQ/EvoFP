@@ -76,6 +76,9 @@ def monitor_queues():
             comment_created_queue = Queue(
                 "comment_created", Exchange("comments"), routing_key="comment.created"
             )
+            task_created_queue.declare(connection)
+            user_registered_queue.declare(connection)
+            comment_created_queue.declare(connection)
 
             queues = [task_created_queue, user_registered_queue, comment_created_queue]
             consumer = QueueConsumer(connection, queues)
