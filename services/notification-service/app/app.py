@@ -35,6 +35,20 @@ def send_email(receiver_email, subject, message):
         server.quit()
 
 
+def prepare_email_data(body, queue_name):
+    match queue_name:
+        case "task_created":
+            email_subject = "Задача создана"
+            email_message = f"Новая задача создана с ID {body['id']}.\n Имя задачи: {body['title']}\n Приоритет: {body['priority']}\n Пользователь: {body['user_id']}"
+        case "user_registered":
+            email_subject = "Регистрация пользователя"
+            email_message = f"Пользователь {body['id']} успешно зарегистрирован.\nEmail: {body['email']}\nNickname: {body['nickname']}\n Имя: {body['first_name']}\nФамилия: {body['last_name']}"
+        case "comment_created":
+            email_subject = "Новый комментарий к задаче"
+            email_message = f"Пользователь {body['user_id']} оставил комментарий к задаче {body['task_id']}\nТекст комментария: {body['text']}"
+    return email_subject, email_message
+
+
 class QueueConsumer(ConsumerMixin):
     def __init__(self, connection, queue_name):
         self.connection = connection
@@ -44,30 +58,8 @@ class QueueConsumer(ConsumerMixin):
         return [Consumer(queues=self.queue_name, callbacks=[self.process_message])]
 
     def process_message(self, body, message):
-        if self.queue_name == "task_created":
-            email_subject = "Задача создана"
-            email_message = f"Новая задача создана с ID {body['id']}.\n Имя задачи: {body['title']}\n Приоритет: {body['priority']}\n Пользователь: {body['user_id']}"
-            send_email(
-                receiver_email=body["email"],
-                subject=email_subject,
-                message=email_message,
-            )
-        elif self.queue_name == "user_registered":
-            email_subject = "Регистрация пользователя"
-            email_message = f"Пользователь {body['id']} успешно зарегистрирован.\nEmail: {body['email']}\nNickname: {body['nickname']}\n Имя: {body['first_name']}\nФамилия: {body['last_name']}"
-            send_email(
-                receiver_email=body["email"],
-                subject=email_subject,
-                message=email_message,
-            )
-        elif self.queue_name == "comment_created":
-            email_subject = "Добавлен комментарий"
-            email_message = f"Пользователь {body['user_id']} добавил комментарий к вашей задаче {body['task_id']}.\n Текст комментария: {body['text']}.\n Номер комментария: {body['id']}"
-            send_email(
-                receiver_email=body["email"],
-                subject=email_subject,
-                message=email_message,
-            )
+        email_subject, email_message = prepare_email_data(body, self.queue_name)
+        send_email(body["email"], email_subject, email_message)
 
         message.ack()
 
@@ -85,13 +77,9 @@ def monitor_queues():
                 "comment_created", Exchange("comments"), routing_key="comment.created"
             )
 
-            task_created_consumer = QueueConsumer(connection, task_created_queue)
-            user_registered_consumer = QueueConsumer(connection, user_registered_queue)
-            comment_created_consumer = QueueConsumer(connection, comment_created_queue)
-
-            task_created_consumer.run()
-            user_registered_consumer.run()
-            comment_created_consumer.run()
+            queues = [task_created_queue, user_registered_queue, comment_created_queue]
+            consumer = QueueConsumer(connection, queues)
+            consumer.run()
 
 
 def start_monitoring():
