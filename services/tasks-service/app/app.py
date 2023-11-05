@@ -1,6 +1,7 @@
 import typing
 from fastapi import Depends, FastAPI, Query
 from fastapi.responses import JSONResponse
+import httpx
 from sqlalchemy.orm import Session
 from .database import DB_INITIALIZER
 from .schemas import Tasks, TasksOn
@@ -78,11 +79,14 @@ async def add_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
     if tasks != None:
         with Connection(cfg.rabbitmq) as connection:
             queue = Queue("task_created", Exchange("tasks"), routing_key="task.created")
+            user_response = await httpx.get("http://user-service:5003/users/me")
+            user_data = user_response.json()
             message = {
                 "id": tasks.id,
                 "title": tasks.title,
                 "priority": tasks.priority,
                 "user_id": tasks.user_id,
+                "email": user_data.get("email"),
             }
         with connection.Producer() as producer:
             producer.publish(

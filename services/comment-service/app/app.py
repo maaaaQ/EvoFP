@@ -1,6 +1,7 @@
 import typing
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+import httpx
 from sqlalchemy.orm import Session
 from .database import DB_INITIALIZER
 from .schemas import CommentsCreate, CommentsUpdate, Comments
@@ -59,11 +60,14 @@ async def add_comment(
             queue = Queue(
                 "comment_created", Exchange("comments"), routing_key="comment.created"
             )
+            user_response = await httpx.get("http://user-service:5003/users/me")
+            user_data = user_response.json()
             message = {
                 "id": comments.id,
                 "text": comments.text,
                 "task_id": comments.task_id,
                 "user_id": comments.user_id,
+                "email": user_data.get("email"),
             }
         with connection.Producer() as producer:
             producer.publish(
