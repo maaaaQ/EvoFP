@@ -9,11 +9,17 @@ from src.users import models, secretprovider
 from kombu import Connection, Exchange, Queue
 from src import config
 from src.brokermanager import brokermanager
+from fastapi_users.db import SQLAlchemyUserDatabase
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
-    def __init__(self, broker_manager: brokermanager.BrokerManager):
-        super().__init__()
+    def __init__(
+        self,
+        broker_manager: brokermanager.BrokerManager,
+        user_db: SQLAlchemyUserDatabase,
+        password_helper: BaseUserManager.password_helper,
+    ):
+        super().init(user_db, password_helper)
         self.broker_manager = broker_manager
 
     async def on_after_register(
@@ -28,7 +34,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
             "last_name": user.last_name,
         }
         await self.broker_manager.publish_message(
-            exchange_name="user_registered",
+            exchange_name="registered",
             routing_key="user.registered",
             message=json.dumps(message),
         )
@@ -79,7 +85,7 @@ async def get_user_manager(
         brokermanager.get_broker_manager
     ),
 ):
-    user_manager = UserManager(broker_manager)
+    user_manager = UserManager(broker_manager, user_db)
     user_manager.reset_password_token_secret = (
         secret_provider.reset_password_token_secret
     )

@@ -5,8 +5,7 @@ from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src import config, users
-
+from src import config, users, brokermanager
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=2, format="%(levelname)-9s %(message)s")
@@ -21,6 +20,8 @@ users.inject_secrets(
     reset_password_token_secret=app_config.reset_password_token_secret.get_secret_value(),
 )
 users.include_routers(app)
+
+brokermanager.brokermanager.inject_brokers(app_config.rabbitmq.unicode_string())
 
 
 @app.post(
