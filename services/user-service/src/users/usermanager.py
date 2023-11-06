@@ -13,13 +13,25 @@ from src.brokermanager import brokermanager
 
 class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
     def __init__(self, broker_manager: brokermanager.BrokerManager):
-        self.broker_manager = broker_manager
         super().__init__()
+        self.broker_manager = broker_manager
 
     async def on_after_register(
         self, user: models.User, request: Optional[Request] = None
     ):
         print(f"User {user.id} has registered.")
+        message = {
+            "user_id": str(user.id),
+            "email": user.email,
+            "nickname": user.nickname,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        }
+        await self.broker_manager.publish_message(
+            exchange_name="registered",
+            routing_key="user.registered",
+            message=json.dumps(message),
+        )
 
     async def create(
         self,
@@ -44,18 +56,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         created_user = await self.user_db.create(user_dict)
 
         await self.on_after_register(created_user, request)
-        message = {
-            "user_id": str(created_user.id),
-            "email": created_user.email,
-            "nickname": created_user.nickname,
-            "first_name": created_user.first_name,
-            "last_name": created_user.last_name,
-        }
-        await self.broker_manager.publish_message(
-            "registered",
-            routing_key="user.registered",
-            message=json.dumps(message),
-        )
 
         return created_user
 
