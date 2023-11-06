@@ -1,4 +1,3 @@
-import time
 from kombu import Connection, Exchange, Producer, Queue
 from . import config
 import smtplib
@@ -30,9 +29,9 @@ def send_email(receiver_email, subject, message):
     msg["From"] = cfg.smtp_user
     msg["To"] = receiver_email
 
-    with smtplib.SMTP_SSL(str(cfg.smtp_host), str(cfg.smtp_port)) as server:
-        server.login(str(cfg.smtp_user), str(cfg.smtp_pass))
-        server.sendmail(str(cfg.smtp_user), receiver_email, msg.as_string())
+    with smtplib.SMTP_SSL(cfg.smtp_host, cfg.smtp_port) as server:
+        server.login(cfg.smtp_user, cfg.smtp_pass)
+        server.sendmail(cfg.smtp_user, receiver_email, msg.as_string())
         server.quit()
 
 
@@ -53,16 +52,14 @@ def prepare_email_data(body, queue_name):
 
 
 class QueueConsumer(ConsumerMixin):
-    def __init__(self, connection, queue_name):
+    def __init__(self, connection):
         self.connection = connection
-        self.queue_name = queue_name
 
     def get_consumers(self, Consumer, channel):
-        return [Consumer(queues=self.queue_name, callbacks=[self.process_message])]
+        return [Consumer(channel, callbacks=[self.process_message])]
 
     def process_message(self, body, message):
-        email_subject, email_message = prepare_email_data(body, self.queue_name)
-        send_email(body["email"], email_subject, email_message)
+        logger.info("RECEIVED MESSAGE: {0!r}".format(body))
 
         message.ack()
 
