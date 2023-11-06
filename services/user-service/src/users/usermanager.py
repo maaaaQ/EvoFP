@@ -1,3 +1,4 @@
+import json
 import uuid
 from typing import Optional
 
@@ -6,32 +7,19 @@ from fastapi_users import BaseUserManager, UUIDIDMixin, models, schemas, excepti
 
 from src.users import models, secretprovider
 from kombu import Connection, Exchange, Queue
-from .. import config
+from src import config
+from src.brokermanager import brokermanager
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
+    def __init__(self, broker_manager: brokermanager.BrokerManager):
+        self.broker_manager = broker_manager
+        super().__init__()
+
     async def on_after_register(
         self, user: models.User, request: Optional[Request] = None
     ):
         print(f"User {user.id} has registered.")
-
-        with Connection(config.Config.rabbitmq) as connection:
-            queue = Queue(
-                "user_registered", Exchange("registered"), routing_key="user.registered"
-            )
-            message = {
-                "id": str(user.id),
-                "email": user.email,
-                "nickname": user.nickname,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-            }
-        with connection.Producer() as producer:
-            producer.publish(
-                message,
-                exchange=queue.exchange,
-                routing_key=queue.routing_key,
-            )
 
     async def create(
         self,
@@ -56,6 +44,18 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         created_user = await self.user_db.create(user_dict)
 
         await self.on_after_register(created_user, request)
+        message = {
+            "user_id": str(created_user.id),
+            "email": created_user.email,
+            "nickname": created_user.nickname,
+            "first_name": created_user.first_name,
+            "last_name": created_user.last_name,
+        }
+        await self.broker_manager.publish_message(
+            "registered",
+            routing_key="user.registered",
+            message=json.dumps(message),
+        )
 
         return created_user
 
@@ -75,8 +75,11 @@ async def get_user_manager(
     secret_provider: secretprovider.SecretProvider = Depends(
         secretprovider.get_secret_provider
     ),
+    broker_manager: brokermanager.BrokerManager = Depends(
+        brokermanager.get_broker_manager
+    ),
 ):
-    user_manager = UserManager(user_db)
+    user_manager = UserManager(broker_manager)
     user_manager.reset_password_token_secret = (
         secret_provider.reset_password_token_secret
     )

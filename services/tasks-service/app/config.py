@@ -1,4 +1,4 @@
-from pydantic import PostgresDsn, Field
+from pydantic import AmqpDsn, PostgresDsn, Field
 from pydantic_settings import BaseSettings
 
 
@@ -13,7 +13,7 @@ class Config(BaseSettings):
 
     bool_example: bool = Field(default=False, env="BOOL_EXAMPLE", alias="BOOL_EXAMPLE")
 
-    rabbitmq: str = Field(
+    rabbitmq: AmqpDsn = Field(
         default="amqp://guest:guest@localhost:5672//",
         env="RABBIT",
         alias="RABBIT",

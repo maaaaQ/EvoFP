@@ -11,7 +11,8 @@ from fastapi_users.authentication import (
 from src.users import models, schemas, secretprovider, usermanager
 from typing import Any, Coroutine
 from fastapi_users.jwt import generate_jwt
-
+from src.brokermanager import brokermanager
+from src import config
 
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
@@ -35,6 +36,11 @@ def get_jwt_strategy(
     ),
 ) -> JWTStrategy:
     return CustomJWTStrategy(secret=secret_provider.jwt_secret, lifetime_seconds=1800)
+
+
+def get_broker_manager():
+    broker_manager = brokermanager.BrokerManager(config.Config.rabbitmq)
+    return broker_manager
 
 
 auth_backend = AuthenticationBackend(

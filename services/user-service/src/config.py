@@ -1,6 +1,6 @@
 import logging
 
-from pydantic import Field, PostgresDsn, SecretStr
+from pydantic import AmqpDsn, Field, PostgresDsn, SecretStr
 from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class Config(BaseSettings):
         alias="VERIFICATION_TOKEN_SECRET",
     )
 
-    rabbitmq: str = Field(
+    rabbitmq: AmqpDsn = Field(
         default="amqp://guest:guest@localhost:5672//",
         env="RABBIT",
         alias="RABBIT",

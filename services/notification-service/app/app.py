@@ -29,13 +29,15 @@ def send_email(receiver_email, subject, message):
     msg["From"] = cfg.smtp_user
     msg["To"] = receiver_email
 
-    with smtplib.SMTP_SSL(cfg.smtp_host, cfg.smtp_port) as server:
-        server.login(cfg.smtp_user, cfg.smtp_pass)
-        server.sendmail(cfg.smtp_user, receiver_email, msg.as_string())
+    with smtplib.SMTP_SSL(str(cfg.smtp_host), str(cfg.smtp_port)) as server:
+        server.login(str(cfg.smtp_user), str(cfg.smtp_pass))
+        server.sendmail(str(cfg.smtp_user), receiver_email, msg.as_string())
         server.quit()
 
 
 def prepare_email_data(body, queue_name):
+    email_subject = "По умолчанию"
+    email_message = "Сообщение по умолчанию"
     match queue_name:
         case "task_created":
             email_subject = "Задача создана"
@@ -65,24 +67,40 @@ class QueueConsumer(ConsumerMixin):
 
 
 def monitor_queues():
-    with Connection(cfg.rabbitmq) as connection:
-        with connection.channel() as channel:
-            task_created_queue = Queue(
-                "task_created", Exchange("tasks"), routing_key="task.created"
-            )
-            user_registered_queue = Queue(
-                "user_registered", Exchange("registered"), routing_key="user.registered"
-            )
-            comment_created_queue = Queue(
-                "comment_created", Exchange("comments"), routing_key="comment.created"
-            )
-            task_created_queue.declare(connection)
-            user_registered_queue.declare(connection)
-            comment_created_queue.declare(connection)
+    try:
+        with Connection(str(cfg.rabbitmq)) as connection:
+            with connection.channel() as channel:
+                task_created_queue = Queue(
+                    "task_created",
+                    Exchange("tasks"),
+                    routing_key="task.created",
+                    channel=channel,
+                )
+                user_registered_queue = Queue(
+                    "user_registered",
+                    Exchange("registered"),
+                    routing_key="user.registered",
+                    channel=channel,
+                )
+                comment_created_queue = Queue(
+                    "comment_created",
+                    Exchange("comments"),
+                    routing_key="comment.created",
+                    channel=channel,
+                )
+                task_created_queue.declare(connection)
+                user_registered_queue.declare(connection)
+                comment_created_queue.declare(connection)
 
-            queues = [task_created_queue, user_registered_queue, comment_created_queue]
-            consumer = QueueConsumer(connection, queues)
-            consumer.run()
+                queues = [
+                    task_created_queue,
+                    user_registered_queue,
+                    comment_created_queue,
+                ]
+                consumer = QueueConsumer(connection, queues)
+                consumer.run()
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
 
 
 def start_monitoring():
