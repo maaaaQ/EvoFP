@@ -10,6 +10,7 @@ from kombu import Connection, Exchange, Queue
 from src import config
 from src.brokermanager import brokermanager
 from fastapi_users.db import SQLAlchemyUserDatabase
+from fastapi_users.password import PasswordHelperProtocol
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
@@ -17,7 +18,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         self,
         broker_manager: brokermanager.BrokerManager,
         user_db: SQLAlchemyUserDatabase,
-        password_helper: BaseUserManager.password_helper,
+        password_helper: PasswordHelperProtocol | None = None,
     ):
         super().init(user_db, password_helper)
         self.broker_manager = broker_manager
