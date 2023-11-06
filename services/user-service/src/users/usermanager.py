@@ -28,7 +28,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
             "last_name": user.last_name,
         }
         await self.broker_manager.publish_message(
-            exchange_name="registered",
+            exchange_name="user_registered",
             routing_key="user.registered",
             message=json.dumps(message),
         )
