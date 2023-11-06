@@ -60,6 +60,9 @@ class QueueConsumer(ConsumerMixin):
 
     def process_message(self, body, message):
         logger.info("RECEIVED MESSAGE: {0!r}".format(body))
+        reciever_email = body["email"]
+        email_subject, email_message = prepare_email_data(body)
+        send_email(reciever_email, email_subject, email_message)
 
         message.ack()
 
