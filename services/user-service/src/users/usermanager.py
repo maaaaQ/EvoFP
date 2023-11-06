@@ -20,7 +20,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         user_db: SQLAlchemyUserDatabase,
         password_helper: PasswordHelperProtocol | None = None,
     ):
-        super().init(user_db, password_helper)
+        super().__init__(user_db, password_helper)
         self.broker_manager = broker_manager
 
     async def on_after_register(
