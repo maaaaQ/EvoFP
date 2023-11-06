@@ -33,10 +33,10 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
             "first_name": user.first_name,
             "last_name": user.last_name,
         }
-        await self.broker_manager.publish_message(
+        self.broker_manager.publish_message(
             exchange_name="registered",
             routing_key="user.registered",
-            message=json.dumps(message),
+            message=message,
         )
 
     async def create(
