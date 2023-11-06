@@ -2,8 +2,9 @@ from kombu import Connection, Exchange, Producer, Queue
 
 
 class BrokerManager:
-    def set_connection_dsn(self, connection_dsn):
-        self.connection_dsn = connection_dsn
+    def set_connection_dsn(self, dsn):
+        self.connection_dsn = Connection(dsn)
+        self.producer = self.connection_dsn.Producer()
 
     def publish_message(self, exchange_name, routing_key, message):
         with Connection(self.connection_dsn) as connection:
