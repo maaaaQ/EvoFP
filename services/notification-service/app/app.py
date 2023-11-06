@@ -37,8 +37,6 @@ def send_email(receiver_email, subject, message):
 
 
 def prepare_email_data(body, queue_name):
-    email_subject = "По умолчанию"
-    email_message = "Сообщение по умолчанию"
     match queue_name:
         case "task_created":
             email_subject = "Задача создана"
