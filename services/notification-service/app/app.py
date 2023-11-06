@@ -67,7 +67,7 @@ class QueueConsumer(ConsumerMixin):
 
 def monitor_queues():
     try:
-        with Connection(str(cfg.rabbitmq)) as connection:
+        with Connection(cfg.rabbitmq.unicode_string()) as connection:
             with connection.channel() as channel:
                 task_created_queue = Queue(
                     "task_created",
