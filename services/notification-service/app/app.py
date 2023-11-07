@@ -122,19 +122,16 @@ class QueueConsumer(ConsumerMixin):
             server.starttls()
             server.login(cfg.smtp_user, cfg.smtp_pass)
             server.sendmail(
-                cfg.smtp_user, receiver_email, msg.as_string().encode("utf-8")
+                from_addr=cfg.smtp_user, to_addrs=receiver_email, msg=msg.as_string()
             )
+            logger.info(f"Email sent to {receiver_email}")
             server.quit()
 
 
 def monitor_queues():
-    try:
-        with Connection(cfg.rabbitmq.unicode_string()) as connection:
-            consumer = QueueConsumer(connection)
-            consumer.run()
-
-    except Exception as e:
-        print(f"Error: {str(e)}")
+    with Connection(cfg.rabbitmq.unicode_string()) as connection:
+        consumer = QueueConsumer(connection)
+        consumer.run()
 
 
 def start_monitoring():

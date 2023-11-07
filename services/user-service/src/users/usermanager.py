@@ -29,7 +29,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         print(f"User {user.id} has registered.")
         message = {
             "user_id": str(user.id),
-            "email": user.email,
+            "email": str(user.email),
             "nickname": user.nickname,
             "first_name": user.first_name,
             "last_name": user.last_name,

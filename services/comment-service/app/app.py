@@ -1,5 +1,5 @@
 import typing
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Header
 from fastapi.responses import JSONResponse
 import httpx
 from sqlalchemy.orm import Session
@@ -38,6 +38,14 @@ def get_db():
         db.close()
 
 
+async def get_email_from_user_service(token: str) -> str:
+    headers = {"Authorization": f"Bearer {token}"}
+    response = httpx.get("http://user-service:5000/users/me", headers=headers)
+    user_data = response.json()
+    email = user_data.get("email")
+    return email
+
+
 # Создание комментария
 @app.post(
     "/comments",
@@ -52,17 +60,22 @@ async def add_comment(
     broker_manager: brokermanager.BrokerManager = Depends(
         brokermanager.get_broker_manager
     ),
+    authorization: str = Header(None),
 ) -> Comments:
     if comments.task_id < 1:
         raise HTTPException(
             status_code=400, detail="Значение поля tasks_id не может быть меньше 1"
         )
+    token = authorization.split(" ")[1]
+    email = await get_email_from_user_service(token)
+    emails = email
     comments = crud.create_comment(db, comments)
     if comments:
         message = {
             "tasks_id": str(comments.task_id),
             "text": str(comments.text),
             "user_id": str(comments.user_id),
+            "email": str(emails),
         }
         broker_manager.publish_message(
             exchange_name="comments",

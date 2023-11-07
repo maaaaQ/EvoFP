@@ -1,5 +1,5 @@
 import typing
-from fastapi import Depends, FastAPI, Query
+from fastapi import Depends, FastAPI, Header, Query
 from fastapi.responses import JSONResponse
 import httpx
 from sqlalchemy.orm import Session
@@ -42,6 +42,14 @@ def get_db():
         db.close()
 
 
+async def get_email_from_user_service(token: str) -> str:
+    headers = {"Authorization": f"Bearer {token}"}
+    response = httpx.get("http://user-service:5000/users/me", headers=headers)
+    user_data = response.json()
+    email = user_data.get("email")
+    return email
+
+
 # Получить все задачи
 @app.get(
     "/tasks",
@@ -82,7 +90,11 @@ async def add_task(
     broker_manager: brokermanager.BrokerManager = Depends(
         brokermanager.get_broker_manager
     ),
+    authorization: str = Header(None),
 ) -> Tasks:
+    token = authorization.split(" ")[1]
+    email = await get_email_from_user_service(token)
+    emails = email
     tasks = crud.create_task(db, tasks)
     if tasks != None:
         message = {
@@ -90,6 +102,7 @@ async def add_task(
             "title": str(tasks.title),
             "priority": str(tasks.priority),
             "user_id": str(tasks.user_id),
+            "email": str(emails),
         }
         broker_manager.publish_message(
             exchange_name="tasks",
