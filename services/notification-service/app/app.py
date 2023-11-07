@@ -1,8 +1,6 @@
-from email.mime.multipart import MIMEMultipart
 from kombu import Connection, Exchange, Producer, Queue
-from . import config
-import smtplib
-from email.mime.text import MIMEText
+from . import config, send_email
+
 from kombu.mixins import ConsumerMixin
 import logging
 from fastapi.logger import logger
@@ -22,22 +20,12 @@ logger.info(
     "Notification Service configuration loaded:\n"
     + f"{cfg.model_dump_json(by_alias=True, indent=4)}"
 )
-
-
-# def prepare_email_data(body, queue_name):
-#     email_subject = ""
-#     email_message = ""
-#     match queue_name:
-#         case "task_created":
-#             email_subject = "Задача создана"
-#             email_message = f"Новая задача создана с ID {body['id']}.\n Имя задачи: {body['title']}\n Приоритет: {body['priority']}\n Пользователь: {body['user_id']}"
-#         case "user_registered":
-#             email_subject = "Регистрация пользователя"
-#             email_message = f"Пользователь {body['id']} успешно зарегистрирован.\nEmail: {body['email']}\nNickname: {body['nickname']}\n Имя: {body['first_name']}\nФамилия: {body['last_name']}"
-#         case "comment_created":
-#             email_subject = "Новый комментарий к задаче"
-#             email_message = f"Пользователь {body['user_id']} оставил комментарий к задаче {body['task_id']}\nТекст комментария: {body['text']}"
-#     return email_subject, email_message
+send_email = send_email.SendEmail(
+    smtp_user=cfg.smtp_user,
+    smtp_pass=cfg.smtp_pass,
+    smtp_host=cfg.smtp_host,
+    smtp_port=cfg.smtp_port,
+)
 
 
 class QueueConsumer(ConsumerMixin):
@@ -78,9 +66,9 @@ class QueueConsumer(ConsumerMixin):
         email = body.get("email")
 
         receiver_email = email
-        email_subject = "Задача создана"
-        email_message = f"Создана новая задача с ID {task_id}. Имя задачи: {title}. Приоритет: {priority}. Пользователь: {user_id}"
-        self.send_email(receiver_email, email_subject, email_message)
+        subject = "Задача создана"
+        message = f"Создана новая задача с ID {task_id}. Имя задачи: {title}. Приоритет: {priority}. Пользователь: {user_id}"
+        send_email.send_message(subject, message, receiver_email)
 
         message.ack()
 
@@ -92,9 +80,9 @@ class QueueConsumer(ConsumerMixin):
         last_name = body.get("last_name")
 
         receiver_email = email
-        email_subject = "Регистрация пользователя"
-        email_message = f"Пользователь {user_id} успешно зарегистрирован. Email: {email}. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
-        self.send_email(receiver_email, email_subject, email_message)
+        subject = "Регистрация пользователя"
+        message = f"Пользователь {user_id} успешно зарегистрирован. Email: {email}. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
+        send_email.send_message(subject, message, receiver_email)
 
         message.ack()
 
@@ -105,27 +93,11 @@ class QueueConsumer(ConsumerMixin):
         email = body.get("email")
 
         receiver_email = email
-        email_subject = "Новый комментарий к задаче"
-        email_message = f"Пользователь {user_id} оставил комментарий к задаче {task_id}. Текст комментария: {comment_text}."
-        self.send_email(receiver_email, email_subject, email_message)
+        subject = "Новый комментарий к задаче"
+        message = f"Пользователь {user_id} оставил комментарий к задаче {task_id}. Текст комментария: {comment_text}."
+        send_email.send_message(subject, message, receiver_email)
 
         message.ack()
-
-    def send_email(self, receiver_email, email_subject, email_message):
-        msg = MIMEMultipart()
-        msg["Subject"] = email_subject
-        msg["From"] = cfg.smtp_user
-        msg["To"] = receiver_email
-        msg.attach(MIMEText(email_message, "plain", "utf-8"))
-
-        with smtplib.SMTP(cfg.smtp_host, cfg.smtp_port) as server:
-            server.starttls()
-            server.login(cfg.smtp_user, cfg.smtp_pass)
-            server.sendmail(
-                from_addr=cfg.smtp_user, to_addrs=receiver_email, msg=msg.as_string()
-            )
-            logger.info(f"Email sent to {receiver_email}")
-            server.quit()
 
 
 def monitor_queues():
