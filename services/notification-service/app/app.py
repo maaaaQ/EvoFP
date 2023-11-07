@@ -75,9 +75,9 @@ class QueueConsumer(ConsumerMixin):
         title = body.get("title")
         priority = body.get("priority")
         user_id = body.get("user_id")
-        email = "probyu@mail.ru"
+        email = body.get("email")
 
-        receiver_email = email  # выяснить как получать почту из  микро сервиса юзер
+        receiver_email = email
         email_subject = "Задача создана"
         email_message = f"Создана новая задача с ID {task_id}. Имя задачи: {title}. Приоритет: {priority}. Пользователь: {user_id}"
         self.send_email(receiver_email, email_subject, email_message)
@@ -91,7 +91,7 @@ class QueueConsumer(ConsumerMixin):
         first_name = body.get("first_name")
         last_name = body.get("last_name")
 
-        receiver_email = body.get("email")
+        receiver_email = email
         email_subject = "Регистрация пользователя"
         email_message = f"Пользователь {user_id} успешно зарегистрирован. Email: {email}. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
         self.send_email(receiver_email, email_subject, email_message)
@@ -102,9 +102,9 @@ class QueueConsumer(ConsumerMixin):
         user_id = body.get("user_id")
         task_id = body.get("task_id")
         comment_text = body.get("text")
-        email = "probyu@mail.ru"
+        email = body.get("email")
 
-        receiver_email = email  # выяснить как получать почту из  микро сервиса юзер
+        receiver_email = email
         email_subject = "Новый комментарий к задаче"
         email_message = f"Пользователь {user_id} оставил комментарий к задаче {task_id}. Текст комментария: {comment_text}."
         self.send_email(receiver_email, email_subject, email_message)
