@@ -1,3 +1,4 @@
+from email.mime.multipart import MIMEMultipart
 from kombu import Connection, Exchange, Producer, Queue
 from . import config
 import smtplib
@@ -23,32 +24,20 @@ logger.info(
 )
 
 
-def send_email(receiver_email, subject, message):
-    msg = MIMEText(message)
-    msg["Subject"] = subject
-    msg["From"] = cfg.smtp_user
-    msg["To"] = receiver_email
-
-    with smtplib.SMTP_SSL(cfg.smtp_host, cfg.smtp_port) as server:
-        server.login(cfg.smtp_user, cfg.smtp_pass)
-        server.sendmail(cfg.smtp_user, receiver_email, msg.as_string())
-        server.quit()
-
-
-def prepare_email_data(body, queue_name):
-    email_subject = ""
-    email_message = ""
-    match queue_name:
-        case "task_created":
-            email_subject = "Задача создана"
-            email_message = f"Новая задача создана с ID {body['id']}.\n Имя задачи: {body['title']}\n Приоритет: {body['priority']}\n Пользователь: {body['user_id']}"
-        case "user_registered":
-            email_subject = "Регистрация пользователя"
-            email_message = f"Пользователь {body['id']} успешно зарегистрирован.\nEmail: {body['email']}\nNickname: {body['nickname']}\n Имя: {body['first_name']}\nФамилия: {body['last_name']}"
-        case "comment_created":
-            email_subject = "Новый комментарий к задаче"
-            email_message = f"Пользователь {body['user_id']} оставил комментарий к задаче {body['task_id']}\nТекст комментария: {body['text']}"
-    return email_subject, email_message
+# def prepare_email_data(body, queue_name):
+#     email_subject = ""
+#     email_message = ""
+#     match queue_name:
+#         case "task_created":
+#             email_subject = "Задача создана"
+#             email_message = f"Новая задача создана с ID {body['id']}.\n Имя задачи: {body['title']}\n Приоритет: {body['priority']}\n Пользователь: {body['user_id']}"
+#         case "user_registered":
+#             email_subject = "Регистрация пользователя"
+#             email_message = f"Пользователь {body['id']} успешно зарегистрирован.\nEmail: {body['email']}\nNickname: {body['nickname']}\n Имя: {body['first_name']}\nФамилия: {body['last_name']}"
+#         case "comment_created":
+#             email_subject = "Новый комментарий к задаче"
+#             email_message = f"Пользователь {body['user_id']} оставил комментарий к задаче {body['task_id']}\nТекст комментария: {body['text']}"
+#     return email_subject, email_message
 
 
 class QueueConsumer(ConsumerMixin):
@@ -56,52 +45,96 @@ class QueueConsumer(ConsumerMixin):
         self.connection = connection
 
     def get_consumers(self, Consumer, channel):
-        return [Consumer(channel, callbacks=[self.process_message])]
+        task_created_queue = Queue(
+            "task_created",
+            exchange=Exchange("tasks"),
+            routing_key="task.created",
+            channel=channel,
+        )
+        user_registered_queue = Queue(
+            "user_registered",
+            exchange=Exchange("registered"),
+            routing_key="user.registered",
+            channel=channel,
+        )
+        comment_created_queue = Queue(
+            "comment_created",
+            exchange=Exchange("comments"),
+            routing_key="comment.created",
+            channel=channel,
+        )
 
-    def process_message(self, body, message):
-        logger.info("RECEIVED MESSAGE: {0!r}".format(body))
-        reciever_email = body["email"]
-        email_subject, email_message = prepare_email_data(body)
-        send_email(reciever_email, email_subject, email_message)
+        return [
+            Consumer(task_created_queue, callbacks=[self.process_task_created]),
+            Consumer(user_registered_queue, callbacks=[self.process_user_registered]),
+            Consumer(comment_created_queue, callbacks=[self.process_comment_created]),
+        ]
+
+    def process_task_created(self, body, message):
+        task_id = body.get("id")
+        title = body.get("title")
+        priority = body.get("priority")
+        user_id = body.get("user_id")
+        email = "probyu@mail.ru"
+
+        receiver_email = email  # выяснить как получать почту из  микро сервиса юзер
+        email_subject = "Задача создана"
+        email_message = f"Создана новая задача с ID {task_id}. Имя задачи: {title}. Приоритет: {priority}. Пользователь: {user_id}"
+        self.send_email(receiver_email, email_subject, email_message)
 
         message.ack()
+
+    def process_user_registered(self, body, message):
+        user_id = body.get("id")
+        email = body.get("email")
+        nickname = body.get("nickname")
+        first_name = body.get("first_name")
+        last_name = body.get("last_name")
+
+        receiver_email = body.get("email")
+        email_subject = "Регистрация пользователя"
+        email_message = f"Пользователь {user_id} успешно зарегистрирован. Email: {email}. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
+        self.send_email(receiver_email, email_subject, email_message)
+
+        message.ack()
+
+    def process_comment_created(self, body, message):
+        user_id = body.get("user_id")
+        task_id = body.get("task_id")
+        comment_text = body.get("text")
+        email = "probyu@mail.ru"
+
+        receiver_email = email  # выяснить как получать почту из  микро сервиса юзер
+        email_subject = "Новый комментарий к задаче"
+        email_message = f"Пользователь {user_id} оставил комментарий к задаче {task_id}. Текст комментария: {comment_text}."
+        self.send_email(receiver_email, email_subject, email_message)
+
+        message.ack()
+
+    def send_email(self, receiver_email, email_subject, email_message):
+        msg = MIMEMultipart()
+        msg["Subject"] = email_subject
+        msg["From"] = cfg.smtp_user
+        msg["To"] = receiver_email
+        msg.attach(MIMEText(email_message, "plain", "utf-8"))
+
+        with smtplib.SMTP(cfg.smtp_host, cfg.smtp_port) as server:
+            server.starttls()
+            server.login(cfg.smtp_user, cfg.smtp_pass)
+            server.sendmail(
+                cfg.smtp_user, receiver_email, msg.as_string().encode("utf-8")
+            )
+            server.quit()
 
 
 def monitor_queues():
     try:
         with Connection(cfg.rabbitmq.unicode_string()) as connection:
-            with connection.channel() as channel:
-                task_created_queue = Queue(
-                    "task_created",
-                    Exchange("tasks"),
-                    routing_key="task.created",
-                    channel=channel,
-                )
-                user_registered_queue = Queue(
-                    "user_registered",
-                    Exchange("registered"),
-                    routing_key="user.registered",
-                    channel=channel,
-                )
-                comment_created_queue = Queue(
-                    "comment_created",
-                    Exchange("comments"),
-                    routing_key="comment.created",
-                    channel=channel,
-                )
-                task_created_queue.declare(connection)
-                user_registered_queue.declare(connection)
-                comment_created_queue.declare(connection)
+            consumer = QueueConsumer(connection)
+            consumer.run()
 
-                queues = [
-                    task_created_queue,
-                    user_registered_queue,
-                    comment_created_queue,
-                ]
-                consumer = QueueConsumer(connection, queues)
-                consumer.run()
     except Exception as e:
-        print(f"Error occurred: {str(e)}")
+        print(f"Error: {str(e)}")
 
 
 def start_monitoring():

@@ -10,7 +10,7 @@ from .enums import FilterPriority, FilterCompleted
 from . import crud, config
 import logging
 from fastapi.logger import logger
-from kombu import Connection, Exchange, Queue
+from .brokermanager import brokermanager
 
 # Настройка журнала для сообщений о событиях
 logger = logging.getLogger(__name__)
@@ -28,6 +28,8 @@ logger.info(
 # Инициализация базы данных
 logger.info("Initializing database...")
 SessionLocal = DB_INITIALIZER.init_database(str(cfg.postgres_dsn))
+
+brokermanager.inject_brokers(cfg.rabbitmq.unicode_string())
 
 app = FastAPI(title="ToDoist API")
 
@@ -74,24 +76,26 @@ async def get_tasks_by_id(tasks_id: int, db: Session = Depends(get_db)) -> Tasks
     response_model=Tasks,
     tags=["tasks"],
 )
-async def add_task(tasks: TasksOn, db: Session = Depends(get_db)) -> Tasks:
+async def add_task(
+    tasks: TasksOn,
+    db: Session = Depends(get_db),
+    broker_manager: brokermanager.BrokerManager = Depends(
+        brokermanager.get_broker_manager
+    ),
+) -> Tasks:
     tasks = crud.create_task(db, tasks)
     if tasks != None:
-        with Connection(cfg.rabbitmq) as connection:
-            queue = Queue("task_created", Exchange("tasks"), routing_key="task.created")
-            user_response = await httpx.get("http://user-service:5003/users/me")
-            user_data = user_response.json()
-            message = {
-                "id": tasks.id,
-                "title": tasks.title,
-                "priority": tasks.priority,
-                "user_id": tasks.user_id,
-                "email": user_data.get("email"),
-            }
-        with connection.Producer() as producer:
-            producer.publish(
-                message, exchange=queue.exchange, routing_key=queue.routing_key
-            )
+        message = {
+            "id": str(tasks.id),
+            "title": str(tasks.title),
+            "priority": str(tasks.priority),
+            "user_id": str(tasks.user_id),
+        }
+        broker_manager.publish_message(
+            exchange_name="tasks",
+            routing_key="task.created",
+            message=message,
+        )
         return tasks
     return JSONResponse(status_code=404, content={"message": "Задача не создана"})
 

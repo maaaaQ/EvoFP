@@ -5,8 +5,7 @@ import httpx
 from sqlalchemy.orm import Session
 from .database import DB_INITIALIZER
 from .schemas import CommentsCreate, CommentsUpdate, Comments
-from kombu import Connection, Exchange, Queue
-
+from .brokermanager import brokermanager
 from . import crud, config
 
 import logging
@@ -19,6 +18,7 @@ logging.basicConfig(level=2, format="%(levelname)-9s %(message)s")
 
 cfg: config.Config = config.load_config()
 
+brokermanager.inject_brokers(cfg.rabbitmq.unicode_string())
 # Загрузка конфигурации
 logger.info(
     "Service configuration loaded:\n"
@@ -49,6 +49,9 @@ def get_db():
 async def add_comment(
     comments: CommentsCreate,
     db: Session = Depends(get_db),
+    broker_manager: brokermanager.BrokerManager = Depends(
+        brokermanager.get_broker_manager
+    ),
 ) -> Comments:
     if comments.task_id < 1:
         raise HTTPException(
@@ -56,23 +59,16 @@ async def add_comment(
         )
     comments = crud.create_comment(db, comments)
     if comments:
-        with Connection(cfg.rabbitmq) as connection:
-            queue = Queue(
-                "comment_created", Exchange("comments"), routing_key="comment.created"
-            )
-            user_response = await httpx.get("http://user-service:5003/users/me")
-            user_data = user_response.json()
-            message = {
-                "id": comments.id,
-                "text": comments.text,
-                "task_id": comments.task_id,
-                "user_id": comments.user_id,
-                "email": user_data.get("email"),
-            }
-        with connection.Producer() as producer:
-            producer.publish(
-                message, exchange=queue.exchange, routing_key=queue.routing_key
-            )
+        message = {
+            "tasks_id": str(comments.task_id),
+            "text": str(comments.text),
+            "user_id": str(comments.user_id),
+        }
+        broker_manager.publish_message(
+            exchange_name="comments",
+            routing_key="comment.created",
+            message=message,
+        )
         return comments
     return JSONResponse(status_code=404, content={"message": "Комментарий не создан"})
 
