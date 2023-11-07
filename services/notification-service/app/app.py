@@ -70,8 +70,6 @@ class QueueConsumer(ConsumerMixin):
         message = f"Создана новая задача с ID {task_id}. Имя задачи: {title}. Приоритет: {priority}. Пользователь: {user_id}"
         send_email.send_message(subject, message, receiver_email)
 
-        message.ack()
-
     def process_user_registered(self, body, message):
         user_id = body.get("id")
         email = body.get("email")
@@ -84,8 +82,6 @@ class QueueConsumer(ConsumerMixin):
         message = f"Пользователь {user_id} успешно зарегистрирован. Email: {email}. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
         send_email.send_message(subject, message, receiver_email)
 
-        message.ack()
-
     def process_comment_created(self, body, message):
         user_id = body.get("user_id")
         task_id = body.get("task_id")
@@ -96,8 +92,6 @@ class QueueConsumer(ConsumerMixin):
         subject = "Новый комментарий к задаче"
         message = f"Пользователь {user_id} оставил комментарий к задаче {task_id}. Текст комментария: {comment_text}."
         send_email.send_message(subject, message, receiver_email)
-
-        message.ack()
 
 
 def monitor_queues():

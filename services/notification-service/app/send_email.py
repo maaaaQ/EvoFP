@@ -2,6 +2,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
 
+from . import config
+
+cfg: config.Config = config.load_config()
+
 
 class SendEmail:
     def __init__(self, smtp_user, smtp_pass, smtp_host, smtp_port):
@@ -11,6 +15,7 @@ class SendEmail:
         self.smtp_port = smtp_port
 
         self.server = smtplib.SMTP(smtp_host, smtp_port)
+        self.server.ehlo()
         self.server.starttls()
         self.server.login(smtp_user, smtp_pass)
 
@@ -21,7 +26,4 @@ class SendEmail:
         msg["To"] = receiver_email
 
         msg.attach(MIMEText(message, "plain"))
-
         self.server.sendmail(self.smtp_user, receiver_email, msg.as_string())
-
-        self.server.quit()
