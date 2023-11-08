@@ -71,7 +71,6 @@ class QueueConsumer(ConsumerMixin):
         send_email.send_message(subject, message, receiver_email)
 
     def process_user_registered(self, body, message):
-        user_id = body.get("id")
         email = body.get("email")
         nickname = body.get("nickname")
         first_name = body.get("first_name")
@@ -79,7 +78,7 @@ class QueueConsumer(ConsumerMixin):
 
         receiver_email = email
         subject = "Регистрация пользователя"
-        message = f"Пользователь {user_id} успешно зарегистрирован. Email: {email}. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
+        message = f"Пользователь {email} успешно зарегистрирован. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
         send_email.send_message(subject, message, receiver_email)
 
     def process_comment_created(self, body, message):
