@@ -81,8 +81,9 @@ class QueueConsumer(ConsumerMixin):
 
         receiver_email = email
         subject = "Задача создана"
-        message = f"Создана новая задача с ID {task_id}. Имя задачи: {title}. Приоритет: {priority}. Пользователь: {user_id}"
-        self.send_email.send_message(subject, message, receiver_email)
+        messages = f"Создана новая задача с ID {task_id}. Имя задачи: {title}. Приоритет: {priority}. Пользователь: {user_id}"
+        self.send_email.send_message(subject, messages, receiver_email)
+        message.ack()
 
     def process_user_registered(self, body, message):
         email = body.get("email")
@@ -92,19 +93,21 @@ class QueueConsumer(ConsumerMixin):
 
         receiver_email = email
         subject = "Регистрация пользователя"
-        message = f"Пользователь {email} успешно зарегистрирован. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
-        self.send_email.send_message(subject, message, receiver_email)
+        messages = f"Пользователь {email} успешно зарегистрирован. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
+        self.send_email.send_message(subject, messages, receiver_email)
+        message.ack()
 
     def process_comment_created(self, body, message):
         user_id = body.get("user_id")
-        task_id = body.get("task_id")
+        task_id = body.get("tasks_id")
         comment_text = body.get("text")
         email = body.get("email")
 
         receiver_email = email
         subject = "Новый комментарий к задаче"
-        message = f"Пользователь {user_id} оставил комментарий к задаче {task_id}. Текст комментария: {comment_text}."
-        self.send_email.send_message(subject, message, receiver_email)
+        messages = f"Пользователь {user_id} оставил комментарий к задаче {task_id}. Текст комментария: {comment_text}."
+        self.send_email.send_message(subject, messages, receiver_email)
+        message.ack()
 
 
 def monitor_queues(send_email):

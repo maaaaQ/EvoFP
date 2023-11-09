@@ -98,7 +98,7 @@ async def add_task(
 
     tasks = crud.create_task(db, tasks)
     if tasks != None:
-        message = {
+        messages = {
             "id": str(tasks.id),
             "title": str(tasks.title),
             "priority": str(tasks.priority),
@@ -108,7 +108,7 @@ async def add_task(
         broker_manager.publish_message(
             exchange_name="tasks",
             routing_key="task.created",
-            message=message,
+            message=messages,
         )
         return tasks
     return JSONResponse(status_code=404, content={"message": "Задача не создана"})

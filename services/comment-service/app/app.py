@@ -71,7 +71,7 @@ async def add_comment(
     email, id = await get_info_from_user_service(token)
     comments = crud.create_comment(db, comments)
     if comments:
-        message = {
+        messages = {
             "tasks_id": str(comments.task_id),
             "text": str(comments.text),
             "user_id": str(id),
@@ -80,7 +80,7 @@ async def add_comment(
         broker_manager.publish_message(
             exchange_name="comments",
             routing_key="comment.created",
-            message=message,
+            message=messages,
         )
         return comments
     return JSONResponse(status_code=404, content={"message": "Комментарий не создан"})
