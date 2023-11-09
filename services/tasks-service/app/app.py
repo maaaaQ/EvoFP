@@ -42,12 +42,13 @@ def get_db():
         db.close()
 
 
-async def get_email_from_user_service(token: str) -> str:
+async def get_info_from_user_service(token: str) -> typing.Tuple[str, str]:
     headers = {"Authorization": f"Bearer {token}"}
     response = httpx.get("http://user-service:5000/users/me", headers=headers)
     user_data = response.json()
     email = user_data.get("email")
-    return email
+    id = user_data.get("id")
+    return email, id
 
 
 # Получить все задачи
@@ -93,16 +94,16 @@ async def add_task(
     authorization: str = Header(None),
 ) -> Tasks:
     token = authorization.split(" ")[1]
-    email = await get_email_from_user_service(token)
-    emails = email
+    email, id = await get_info_from_user_service(token)
+
     tasks = crud.create_task(db, tasks)
     if tasks != None:
         message = {
             "id": str(tasks.id),
             "title": str(tasks.title),
             "priority": str(tasks.priority),
-            "user_id": str(tasks.user_id),
-            "email": str(emails),
+            "user_id": str(id),
+            "email": str(email),
         }
         broker_manager.publish_message(
             exchange_name="tasks",

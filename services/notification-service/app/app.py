@@ -29,8 +29,9 @@ send_email = send_email.SendEmail(
 
 
 class QueueConsumer(ConsumerMixin):
-    def __init__(self, connection):
+    def __init__(self, connection, send_email):
         self.connection = connection
+        self.send_email = send_email
 
     def get_consumers(self, Consumer, channel):
         task_created_queue = Queue(
@@ -53,10 +54,23 @@ class QueueConsumer(ConsumerMixin):
         )
 
         return [
-            Consumer(task_created_queue, callbacks=[self.process_task_created]),
-            Consumer(user_registered_queue, callbacks=[self.process_user_registered]),
-            Consumer(comment_created_queue, callbacks=[self.process_comment_created]),
+            Consumer(task_created_queue, callbacks=[self.process_task_created_wrapper]),
+            Consumer(
+                user_registered_queue, callbacks=[self.process_user_registered_wrapper]
+            ),
+            Consumer(
+                comment_created_queue, callbacks=[self.process_comment_created_wrapper]
+            ),
         ]
+
+    def process_task_created_wrapper(self, body, message):
+        self.process_task_created(body, message)
+
+    def process_user_registered_wrapper(self, body, message):
+        self.process_user_registered(body, message)
+
+    def process_comment_created_wrapper(self, body, message):
+        self.process_comment_created(body, message)
 
     def process_task_created(self, body, message):
         task_id = body.get("id")
@@ -68,7 +82,7 @@ class QueueConsumer(ConsumerMixin):
         receiver_email = email
         subject = "Задача создана"
         message = f"Создана новая задача с ID {task_id}. Имя задачи: {title}. Приоритет: {priority}. Пользователь: {user_id}"
-        send_email.send_message(subject, message, receiver_email)
+        self.send_email.send_message(subject, message, receiver_email)
 
     def process_user_registered(self, body, message):
         email = body.get("email")
@@ -79,7 +93,7 @@ class QueueConsumer(ConsumerMixin):
         receiver_email = email
         subject = "Регистрация пользователя"
         message = f"Пользователь {email} успешно зарегистрирован. Nickname: {nickname}. Имя: {first_name}. Фамилия: {last_name}"
-        send_email.send_message(subject, message, receiver_email)
+        self.send_email.send_message(subject, message, receiver_email)
 
     def process_comment_created(self, body, message):
         user_id = body.get("user_id")
@@ -90,17 +104,17 @@ class QueueConsumer(ConsumerMixin):
         receiver_email = email
         subject = "Новый комментарий к задаче"
         message = f"Пользователь {user_id} оставил комментарий к задаче {task_id}. Текст комментария: {comment_text}."
-        send_email.send_message(subject, message, receiver_email)
+        self.send_email.send_message(subject, message, receiver_email)
 
 
-def monitor_queues():
+def monitor_queues(send_email):
     with Connection(cfg.rabbitmq.unicode_string()) as connection:
-        consumer = QueueConsumer(connection)
+        consumer = QueueConsumer(connection, send_email)
         consumer.run()
 
 
 def start_monitoring():
-    monitor_queues()
+    monitor_queues(send_email)
 
 
 process = multiprocessing.Process(target=start_monitoring)

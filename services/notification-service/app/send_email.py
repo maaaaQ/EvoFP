@@ -14,9 +14,7 @@ class SendEmail:
         self.smtp_host = smtp_host
         self.smtp_port = smtp_port
 
-        self.server = smtplib.SMTP(smtp_host, smtp_port)
-        self.server.ehlo()
-        self.server.starttls()
+        self.server = smtplib.SMTP_SSL(smtp_host, smtp_port)
         self.server.login(smtp_user, smtp_pass)
 
     def send_message(self, subject, message, receiver_email):

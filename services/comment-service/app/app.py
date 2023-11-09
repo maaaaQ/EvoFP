@@ -38,12 +38,13 @@ def get_db():
         db.close()
 
 
-async def get_email_from_user_service(token: str) -> str:
+async def get_info_from_user_service(token: str) -> typing.Tuple[str, str]:
     headers = {"Authorization": f"Bearer {token}"}
     response = httpx.get("http://user-service:5000/users/me", headers=headers)
     user_data = response.json()
     email = user_data.get("email")
-    return email
+    id = user_data.get("id")
+    return email, id
 
 
 # Создание комментария
@@ -67,15 +68,14 @@ async def add_comment(
             status_code=400, detail="Значение поля tasks_id не может быть меньше 1"
         )
     token = authorization.split(" ")[1]
-    email = await get_email_from_user_service(token)
-    emails = email
+    email, id = await get_info_from_user_service(token)
     comments = crud.create_comment(db, comments)
     if comments:
         message = {
             "tasks_id": str(comments.task_id),
             "text": str(comments.text),
-            "user_id": str(comments.user_id),
-            "email": str(emails),
+            "user_id": str(id),
+            "email": str(email),
         }
         broker_manager.publish_message(
             exchange_name="comments",
