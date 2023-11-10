@@ -5,7 +5,6 @@ from kombu.mixins import ConsumerMixin
 import logging
 from fastapi.logger import logger
 from fastapi import FastAPI
-import multiprocessing
 
 app = FastAPI()
 
@@ -120,5 +119,4 @@ def start_monitoring():
     monitor_queues(send_email)
 
 
-process = multiprocessing.Process(target=start_monitoring)
-process.start()
+start_monitoring()
