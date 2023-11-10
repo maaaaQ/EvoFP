@@ -1,6 +1,7 @@
 import typing
 
 from sqlalchemy import delete, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.users import models, schemas
@@ -46,6 +47,19 @@ async def update_group(
     await session.commit()
     if result:
         return await get_group_by_id(session, group_id)
+    return None
+
+
+async def upsert_group(
+    session: AsyncSession, group: schemas.GroupUpsert
+) -> models.Group:
+    stm = insert(models.Group).values(group.model_dump())
+    stm = stm.on_conflict_do_update(constraint="group_pkey", set_={"name": group.name})
+    result = await session.execute(stm)
+
+    await session.commit()
+    if result:
+        return await get_group_by_id(session, group.id)
     return None
 
 

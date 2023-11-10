@@ -20,6 +20,14 @@ class GroupRead(BaseModel):
         orm_mode = True
 
 
+class GroupUpsert(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        orm_mode = True
+
+
 class GroupUpdate(BaseModel):
     name: str
 

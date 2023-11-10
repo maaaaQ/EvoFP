@@ -1,6 +1,6 @@
 import logging
 
-from pydantic import AmqpDsn, Field, PostgresDsn, SecretStr
+from pydantic import AmqpDsn, Field, PostgresDsn, SecretStr, FilePath
 from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,12 @@ class Config(BaseSettings):
         default="amqp://guest:guest@localhost:5672//",
         env="RABBIT",
         alias="RABBIT",
+    )
+
+    default_groups_config_path: FilePath = Field(
+        default="default-groups.json",
+        env="DEFAULT_GROUPS_CONFIG_PATH",
+        alias="DEFAULT_GROUPS_CONFIG_PATH",
     )
 
     class Config:
