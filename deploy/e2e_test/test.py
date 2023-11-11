@@ -56,7 +56,7 @@ class BaseUserTestCase(unittest.TestCase):
 
     def _register_test_user(self, group_id: int) -> User:
         payload = {
-            "email": "test@test.com",
+            "email": "test@mail.com",
             "password": "test",
             "is_active": True,
             "is_superuser": False,
@@ -101,11 +101,24 @@ class BaseUserTestCase(unittest.TestCase):
             )
             connection.commit()
 
+    def _set_groupsid(self, group_id: int):
+        if self.test_user is None:
+            return
+        self.test_user.group_id = group_id
+        engine = create_engine(DATABASE_DSN)
+        with engine.connect() as connection:
+            connection.execute(
+                text(
+                    f"""UPDATE "user" SET group_id = {self.test_user.group_id} WHERE id = '{self.test_user.id}';"""
+                )
+            )
+            connection.commit()
+
     def _login(self):
         self._raise_if_invalid_user()
         try:
             data = {
-                "username": "test@test.com",
+                "username": "test@mail.com",
                 "password": "test",
             }
             response = requests.post(f"{ENTRYPOINT}auth/jwt/login", data=data)
@@ -123,6 +136,7 @@ class TestAdminPolicies(BaseUserTestCase):
     def setUp(self) -> None:
         super().setUp(ADMIN_GROUP_ID)
         self._set_superuser(True)
+        self._set_groupsid(1)
         self._login()
 
     def tearDown(self) -> None:
@@ -135,13 +149,6 @@ class TestAdminPolicies(BaseUserTestCase):
         data = response.json()
         self.assertIsInstance(data, list)
 
-    def test_delete_comment_permissions(self):
-        self._raise_if_invalid_user()
-        response = requests.delete(f"{ENTRYPOINT}comments/1", headers=self.auth_headers)
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertIsInstance(data, list)
-
 
 class TestUserPolicies(BaseUserTestCase):
     def setUp(self) -> None:
@@ -150,9 +157,9 @@ class TestUserPolicies(BaseUserTestCase):
     def tearDown(self) -> None:
         return super().tearDown()
 
-    def test_get_groups_list(self):
+    def test_get_groupname_by_id(self):
         self._raise_if_invalid_user()
-        response = requests.get(f"{ENTRYPOINT}groups", headers=self.auth_headers)
+        response = requests.get(f"{ENTRYPOINT}groups/1", headers=self.auth_headers)
         self.assertEqual(response.status_code, 404)
         data = response.json()
         self.assertIsInstance(data, dict)
@@ -183,6 +190,14 @@ class TestUserPolicies(BaseUserTestCase):
         self.assertEqual(response.status_code, 201)
         data = response.json()
         self.assertIsInstance(data, dict)
+
+    def test_delete_comment_permissions(self):
+        self._raise_if_invalid_user()
+        response = requests.delete(f"{ENTRYPOINT}comments/5", headers=self.auth_headers)
+        self.assertEqual(response.status_code, 404)
+        data = response.json()
+        self.assertIsInstance(data, dict)
+        self.assertDictEqual(data, ACCESS_DENIED_MESSAGE)
 
 
 if __name__ == "__main__":

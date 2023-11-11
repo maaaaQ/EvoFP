@@ -17,6 +17,12 @@ volumes:
       o: bind
       type: none
       device: ./user-service
+  e2e-test-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./e2e_test
 services:
   rabbitmq:
     container_name: rabbitmq
@@ -72,8 +78,8 @@ services:
     environment:
       POSTGRES_DSN:
     depends_on:
-      - postgresql:
-          condition: service_healthy
+      postgresql:
+        condition: service_healthy
     env_file:
       - .env
   comment-service:
@@ -88,8 +94,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgresql:
-          condition: service_healthy
+      postgresql:
+        condition: service_healthy
   user-service:
     container_name: user-service
     build:
@@ -108,8 +114,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgresql:
-          condition: service_healthy
+      postgresql:
+        condition: service_healthy
   notification-service:
     container_name: notification-service
     build:
