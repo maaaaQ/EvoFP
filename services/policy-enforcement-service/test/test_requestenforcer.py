@@ -70,45 +70,70 @@ class RequestEnforceTestCase(unittest.TestCase):
             TEST_POLICIES_CONFIG, TEST_JWT_SECRET
         )
 
-    def test_tasks_allow(self):
+    def test_tasks_get_allow(self):
         request = self._prepare_request(1, "GET", "/tasks")
         result = self.policy_checker.enforce(request)
         self._assert_access_allow(result, TASKS_SERVICE.entrypoint.unicode_string())
 
-    def test_tasks_denied(self):
+    def test_tasks_create_allow(self):
+        request = self._prepare_request(2, "POST", "/tasks")
+        result = self.policy_checker.enforce(request)
+        self._assert_access_allow(result, TASKS_SERVICE.entrypoint.unicode_string())
+
+    def test_tasks_delete_denied(self):
         request = self._prepare_request(2, "DELETE", "/tasks")
         result = self.policy_checker.enforce(request)
         self._assert_access_denied(result)
 
-    def test_comments_allow(self):
+    def test_comments_get_allow(self):
         request = self._prepare_request(1, "GET", "/comments")
         result = self.policy_checker.enforce(request)
         self._assert_access_allow(result, COMMENT_SERVICE.entrypoint.unicode_string())
 
-    def test_comments_denied(self):
+    def test_comments_create_allow(self):
+        request = self._prepare_request(2, "POST", "/comments")
+        result = self.policy_checker.enforce(request)
+        self._assert_access_allow(result, COMMENT_SERVICE.entrypoint.unicode_string())
+
+    def test_comments_delete_denied(self):
         request = self._prepare_request(2, "DELETE", "/comments")
         result = self.policy_checker.enforce(request)
         self._assert_access_denied(result)
 
-    def test_groups_allow(self):
+    def test_groups_create_allow(self):
         request = self._prepare_request(1, "POST", "/groups")
         result = self.policy_checker.enforce(request)
         self._assert_access_allow(result, USER_SERVICE.entrypoint.unicode_string())
 
-    def test_groups_denied(self):
+    def test_groups_get_allow(self):
+        request = self._prepare_request(1, "GET", "/groups")
+        result = self.policy_checker.enforce(request)
+        self._assert_access_allow(result, USER_SERVICE.entrypoint.unicode_string())
+
+    def test_groups_get_denied(self):
+        request = self._prepare_request(2, "GET", "/groups")
+        result = self.policy_checker.enforce(request)
+        self._assert_access_denied(result)
+
+    def test_groups_delete_denied(self):
         request = self._prepare_request(2, "DELETE", "/groups")
         result = self.policy_checker.enforce(request)
         self._assert_access_denied(result)
 
-    def test_users_allow(self):
+    def test_users_info_allow(self):
         request = self._prepare_request(2, "GET", "/users/me")
         result = self.policy_checker.enforce(request)
         self._assert_access_allow(result, USER_SERVICE.entrypoint.unicode_string())
 
-    def test_users_denied(self):
-        request = self._prepare_request(1, "POST", "/users/1555", make_headers=False)
+    def test_users_delete_denied(self):
+        request = self._prepare_request(2, "DELETE", "/users/554")
         result = self.policy_checker.enforce(request)
         self._assert_access_denied(result)
+
+    def test_users_delete_allow(self):
+        request = self._prepare_request(1, "DELETE", "/users/15")
+        result = self.policy_checker.enforce(request)
+        self._assert_access_allow(result, USER_SERVICE.entrypoint.unicode_string())
 
     def test_auth_allow(self):
         request = self._prepare_request(1, "POST", "/auth/auth", make_headers=False)
