@@ -8,10 +8,7 @@ from sqlalchemy.sql import text
 ENTRYPOINT = "http://policy-enforcement-service:5000/"
 DATABASE_DSN = "postgresql://postgres:postgresql7@postgresql:5432/postgres"
 ACCESS_DENIED_MESSAGE = {"message": "Content not found"}
-ADMIN_GROUP_ID = 1
-USER_GROUP_ID = 2
 
-# setup logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)-9s %(message)s")
 
@@ -47,7 +44,7 @@ class BaseUserTestCase(unittest.TestCase):
         self.test_user: User = None
         self.access_token: str = None
 
-    def setUp(self, group_id: int) -> None:
+    def setUp(self, group_id: int = None) -> None:
         self._register_test_user(group_id)
         self._login()
 
@@ -88,20 +85,7 @@ class BaseUserTestCase(unittest.TestCase):
             )
             connection.commit()
 
-    def _set_superuser(self, is_superuser: bool):
-        if self.test_user is None:
-            return
-        self.test_user.is_superuser = is_superuser
-        engine = create_engine(DATABASE_DSN)
-        with engine.connect() as connection:
-            connection.execute(
-                text(
-                    f"""UPDATE "user" SET is_superuser = {self.test_user.is_superuser} WHERE id = '{self.test_user.id}';"""
-                )
-            )
-            connection.commit()
-
-    def _set_groupsid(self, group_id: int):
+    def _set_group_id(self, group_id: int):
         if self.test_user is None:
             return
         self.test_user.group_id = group_id
@@ -134,9 +118,8 @@ class BaseUserTestCase(unittest.TestCase):
 
 class TestAdminPolicies(BaseUserTestCase):
     def setUp(self) -> None:
-        super().setUp(ADMIN_GROUP_ID)
-        self._set_superuser(True)
-        self._set_groupsid(1)
+        super().setUp()
+        self._set_group_id(1)
         self._login()
 
     def tearDown(self) -> None:
@@ -149,10 +132,37 @@ class TestAdminPolicies(BaseUserTestCase):
         data = response.json()
         self.assertIsInstance(data, list)
 
+    def test_get_groupname_by_id(self):
+        self._raise_if_invalid_user()
+        response = requests.get(f"{ENTRYPOINT}groups/1", headers=self.auth_headers)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, dict)
+
+    def test_delete_user_task(self):
+        self._raise_if_invalid_user()
+        response = requests.delete(
+            f"{ENTRYPOINT}tasks/9",
+            headers=self.auth_headers,
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, dict)
+
+    def test_delete_user_comment_on_task(self):
+        self._raise_if_invalid_user()
+        response = requests.delete(
+            f"{ENTRYPOINT}comments/40?tasks_id=2",
+            headers=self.auth_headers,
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, dict)
+
 
 class TestUserPolicies(BaseUserTestCase):
     def setUp(self) -> None:
-        super().setUp(USER_GROUP_ID)
+        super().setUp()
 
     def tearDown(self) -> None:
         return super().tearDown()
@@ -168,6 +178,13 @@ class TestUserPolicies(BaseUserTestCase):
     def test_get_tasks_list(self):
         self._raise_if_invalid_user()
         response = requests.get(f"{ENTRYPOINT}tasks", headers=self.auth_headers)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, list)
+
+    def test_get_comments_list(self):
+        self._raise_if_invalid_user()
+        response = requests.get(f"{ENTRYPOINT}comments", headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsInstance(data, list)
@@ -194,6 +211,17 @@ class TestUserPolicies(BaseUserTestCase):
     def test_delete_comment_permissions(self):
         self._raise_if_invalid_user()
         response = requests.delete(f"{ENTRYPOINT}comments/5", headers=self.auth_headers)
+        self.assertEqual(response.status_code, 404)
+        data = response.json()
+        self.assertIsInstance(data, dict)
+        self.assertDictEqual(data, ACCESS_DENIED_MESSAGE)
+
+    def test_delete_user_permissions(self):
+        self._raise_if_invalid_user()
+        response = requests.delete(
+            f"{ENTRYPOINT}users/ee7e40ae-b8b0-4a87-915d-42ff3e9cacc1",
+            headers=self.auth_headers,
+        )
         self.assertEqual(response.status_code, 404)
         data = response.json()
         self.assertIsInstance(data, dict)
