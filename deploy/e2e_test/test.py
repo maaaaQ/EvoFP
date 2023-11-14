@@ -2,8 +2,9 @@ import unittest
 import requests
 import logging
 import pydantic
-from sqlalchemy import create_engine
+from sqlalchemy import TIMESTAMP, create_engine
 from sqlalchemy.sql import text
+from sqlalchemy.dialects.postgresql import UUID
 
 ENTRYPOINT = "http://policy-enforcement-service:5000/"
 DATABASE_DSN = "postgresql://postgres:postgresql7@postgresql:5432/postgres"
@@ -25,6 +26,34 @@ class User(pydantic.BaseModel):
     age: int
     group_id: int
 
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class Task(pydantic.BaseModel):
+    id: int
+    title: str
+    description: str
+    priority: str
+    is_completed: str
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+    user_id: UUID
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class Comment(pydantic.BaseModel):
+    id: int
+    text: str
+    user_id: UUID
+    created_at: TIMESTAMP
+    task_id: int
+
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class TestCommonFunctionality(unittest.TestCase):
     def setUp(self) -> None:
@@ -43,17 +72,23 @@ class BaseUserTestCase(unittest.TestCase):
         super().__init__(methodName)
         self.test_user: User = None
         self.access_token: str = None
+        self.test_task: Task = None
+        self.test_comment: Comment = None
 
     def setUp(self, group_id: int = None) -> None:
         self._register_test_user(group_id)
         self._login()
+        self._create_test_task()
+        self._create_test_comment()
 
     def tearDown(self) -> None:
+        self._delete_test_comment()
+        self._delete_test_task()
         self._delete_test_user()
 
     def _register_test_user(self, group_id: int) -> User:
         payload = {
-            "email": "test@mail.com",
+            "email": "testTest1@mail.com",
             "password": "test",
             "is_active": True,
             "is_superuser": False,
@@ -71,6 +106,47 @@ class BaseUserTestCase(unittest.TestCase):
         except requests.exceptions.HTTPError as exc:
             logger.error(exc)
 
+    def _create_test_task(self) -> Task:
+        if self.test_user is None:
+            raise Exception("Cannot create task without valid user!")
+        payload = {
+            "title": "Test",
+            "description": "Testing",
+            "priority": "high",
+            "is_completed": "not_completed",
+            "created_at": "2023-11-10T09:23:06.698Z",
+            "updated_at": "2023-11-10T09:23:06.698Z",
+            "user_id": self.test_user.id,
+        }
+        try:
+            response = requests.post(
+                f"{ENTRYPOINT}task", json=payload, headers=self.auth_headers
+            )
+            response.raise_for_status()
+            data = response.json()
+            self.test_task_id = data["id"]
+        except requests.exceptions.HTTPError as exc:
+            logger.error(exc)
+
+    def _create_test_comment(self) -> Comment:
+        if self.test_user is None or self.test_task is None:
+            raise Exception("Cannot create comment without valid user and task!")
+        payload = {
+            "id": 1,
+            "text": "Test",
+            "user_id": self.test_user.id,
+            "created_at": "2023-11-10T09:23:06.698Z",
+            "task_id": self.test_task.id,
+        }
+        try:
+            response = requests.post(
+                f"{ENTRYPOINT}comments", json=payload, headers=self.auth_headers
+            )
+            response.raise_for_status()
+            return Comment(**response.json())
+        except requests.exceptions.HTTPError as exc:
+            logger.error(exc)
+
     def _raise_if_invalid_user(self):
         if self.test_user is None:
             raise Exception("Cannot continue test without valid user!")
@@ -82,6 +158,26 @@ class BaseUserTestCase(unittest.TestCase):
         with engine.connect() as connection:
             connection.execute(
                 text(f"""DELETE FROM "user" WHERE id = '{self.test_user.id}';""")
+            )
+            connection.commit()
+
+    def _delete_test_task(self):
+        if self.test_task is None:
+            return
+        engine = create_engine(DATABASE_DSN)
+        with engine.connect() as connection:
+            connection.execute(
+                text(f"""DELETE FROM "tasks" WHERE id = '{self.test_task.id}';""")
+            )
+            connection.commit()
+
+    def _delete_test_comment(self):
+        if self.test_comment is None:
+            return
+        engine = create_engine(DATABASE_DSN)
+        with engine.connect() as connection:
+            connection.execute(
+                text(f"""DELETE FROM "comments" WHERE id = '{self.test_comment.id}';""")
             )
             connection.commit()
 
@@ -102,7 +198,7 @@ class BaseUserTestCase(unittest.TestCase):
         self._raise_if_invalid_user()
         try:
             data = {
-                "username": "test@mail.com",
+                "username": "testTest@mail.com",
                 "password": "test",
             }
             response = requests.post(f"{ENTRYPOINT}auth/jwt/login", data=data)
@@ -126,6 +222,8 @@ class TestAdminPolicies(BaseUserTestCase):
         return super().tearDown()
 
     def test_get_groups_list(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
         response = requests.get(f"{ENTRYPOINT}groups", headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
@@ -133,6 +231,8 @@ class TestAdminPolicies(BaseUserTestCase):
         self.assertIsInstance(data, list)
 
     def test_get_groupname_by_id(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
         response = requests.get(f"{ENTRYPOINT}groups/1", headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
@@ -140,9 +240,13 @@ class TestAdminPolicies(BaseUserTestCase):
         self.assertIsInstance(data, dict)
 
     def test_delete_user_task(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
+        self._create_test_task()
+        task_id = self.test_task.id
         response = requests.delete(
-            f"{ENTRYPOINT}tasks/9",
+            f"{ENTRYPOINT}tasks/{task_id}",
             headers=self.auth_headers,
         )
         self.assertEqual(response.status_code, 200)
@@ -150,9 +254,13 @@ class TestAdminPolicies(BaseUserTestCase):
         self.assertIsInstance(data, dict)
 
     def test_delete_user_comment_on_task(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
+        test_comment = self._create_test_comment()
+        test_task = self._create_test_task()
         response = requests.delete(
-            f"{ENTRYPOINT}comments/40?tasks_id=2",
+            f"{ENTRYPOINT}comments/{test_comment.id}?skip=0&limit=100&tasks_id={test_task.id}",
             headers=self.auth_headers,
         )
         self.assertEqual(response.status_code, 200)
@@ -163,11 +271,15 @@ class TestAdminPolicies(BaseUserTestCase):
 class TestUserPolicies(BaseUserTestCase):
     def setUp(self) -> None:
         super().setUp()
+        self._create_test_task()
 
     def tearDown(self) -> None:
-        return super().tearDown()
+        super().tearDown()
+        self._create_test_task()
 
     def test_get_groupname_by_id(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
         response = requests.get(f"{ENTRYPOINT}groups/1", headers=self.auth_headers)
         self.assertEqual(response.status_code, 404)
@@ -176,6 +288,8 @@ class TestUserPolicies(BaseUserTestCase):
         self.assertDictEqual(data, ACCESS_DENIED_MESSAGE)
 
     def test_get_tasks_list(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
         response = requests.get(f"{ENTRYPOINT}tasks", headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
@@ -183,6 +297,8 @@ class TestUserPolicies(BaseUserTestCase):
         self.assertIsInstance(data, list)
 
     def test_get_comments_list(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
         response = requests.get(f"{ENTRYPOINT}comments", headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
@@ -190,6 +306,8 @@ class TestUserPolicies(BaseUserTestCase):
         self.assertIsInstance(data, list)
 
     def test_create_new_task(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
         response = requests.post(
             f"{ENTRYPOINT}task",
@@ -209,6 +327,8 @@ class TestUserPolicies(BaseUserTestCase):
         self.assertIsInstance(data, dict)
 
     def test_delete_comment_permissions(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
         response = requests.delete(f"{ENTRYPOINT}comments/5", headers=self.auth_headers)
         self.assertEqual(response.status_code, 404)
@@ -217,9 +337,12 @@ class TestUserPolicies(BaseUserTestCase):
         self.assertDictEqual(data, ACCESS_DENIED_MESSAGE)
 
     def test_delete_user_permissions(self):
+        if self.test_user is None:
+            return
         self._raise_if_invalid_user()
+        user_id = self.test_user.id
         response = requests.delete(
-            f"{ENTRYPOINT}users/ee7e40ae-b8b0-4a87-915d-42ff3e9cacc1",
+            f"{ENTRYPOINT}users/{user_id}",
             headers=self.auth_headers,
         )
         self.assertEqual(response.status_code, 404)
