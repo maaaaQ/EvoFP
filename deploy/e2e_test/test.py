@@ -88,7 +88,7 @@ class BaseUserTestCase(unittest.TestCase):
 
     def _register_test_user(self, group_id: int) -> User:
         payload = {
-            "email": "testTest1@mail.com",
+            "email": "testing@gmail.com",
             "password": "test",
             "is_active": True,
             "is_superuser": False,
@@ -198,7 +198,7 @@ class BaseUserTestCase(unittest.TestCase):
         self._raise_if_invalid_user()
         try:
             data = {
-                "username": "testTest@mail.com",
+                "username": "testing@gmail.com",
                 "password": "test",
             }
             response = requests.post(f"{ENTRYPOINT}auth/jwt/login", data=data)
@@ -260,7 +260,7 @@ class TestAdminPolicies(BaseUserTestCase):
         test_comment = self._create_test_comment()
         test_task = self._create_test_task()
         response = requests.delete(
-            f"{ENTRYPOINT}comments/{test_comment.id}?skip=0&limit=100&tasks_id={test_task.id}",
+            f"{ENTRYPOINT}comments/{test_comment.id}?tasks_id={test_task.id}",
             headers=self.auth_headers,
         )
         self.assertEqual(response.status_code, 200)
