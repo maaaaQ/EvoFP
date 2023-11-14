@@ -88,7 +88,7 @@ class BaseUserTestCase(unittest.TestCase):
 
     def _register_test_user(self, group_id: int) -> User:
         payload = {
-            "email": "testing@gmail.com",
+            "email": "testtt@gmail.com",
             "password": "test",
             "is_active": True,
             "is_superuser": False,
@@ -198,7 +198,7 @@ class BaseUserTestCase(unittest.TestCase):
         self._raise_if_invalid_user()
         try:
             data = {
-                "username": "testing@gmail.com",
+                "username": "testtt@gmail.com",
                 "password": "test",
             }
             response = requests.post(f"{ENTRYPOINT}auth/jwt/login", data=data)
@@ -217,9 +217,11 @@ class TestAdminPolicies(BaseUserTestCase):
         super().setUp()
         self._set_group_id(1)
         self._login()
+        self._create_test_task()
+        self._create_test_comment()
 
     def tearDown(self) -> None:
-        return super().tearDown()
+        super().tearDown()
 
     def test_get_groups_list(self):
         if self.test_user is None:
@@ -272,10 +274,10 @@ class TestUserPolicies(BaseUserTestCase):
     def setUp(self) -> None:
         super().setUp()
         self._create_test_task()
+        self._create_test_comment()
 
     def tearDown(self) -> None:
         super().tearDown()
-        self._create_test_task()
 
     def test_get_groupname_by_id(self):
         if self.test_user is None:
