@@ -2,9 +2,9 @@ import unittest
 import requests
 import logging
 import pydantic
-from sqlalchemy import TIMESTAMP, create_engine
+from sqlalchemy import create_engine
 from sqlalchemy.sql import text
-from sqlalchemy.dialects.postgresql import UUID
+
 
 ENTRYPOINT = "http://policy-enforcement-service:5000/"
 DATABASE_DSN = "postgresql://postgres:postgresql7@postgresql:5432/postgres"
@@ -36,9 +36,9 @@ class Task(pydantic.BaseModel):
     description: str
     priority: str
     is_completed: str
-    created_at: TIMESTAMP
-    updated_at: TIMESTAMP
-    user_id: UUID
+    created_at: str
+    updated_at: str
+    user_id: str
 
     class Config:
         arbitrary_types_allowed = True
@@ -47,8 +47,8 @@ class Task(pydantic.BaseModel):
 class Comment(pydantic.BaseModel):
     id: int
     text: str
-    user_id: UUID
-    created_at: TIMESTAMP
+    user_id: str
+    created_at: str
     task_id: int
 
     class Config:
@@ -78,8 +78,8 @@ class BaseUserTestCase(unittest.TestCase):
     def setUp(self, group_id: int = None) -> None:
         self._register_test_user(group_id)
         self._login()
-        self._create_test_task()
-        self._create_test_comment()
+        self.test_task = self._create_test_task()
+        self.test_comment = self._create_test_comment()
 
     def tearDown(self) -> None:
         self._delete_test_comment()
@@ -88,7 +88,7 @@ class BaseUserTestCase(unittest.TestCase):
 
     def _register_test_user(self, group_id: int) -> User:
         payload = {
-            "email": "testtt@gmail.com",
+            "email": "tester@gmail.com",
             "password": "test",
             "is_active": True,
             "is_superuser": False,
@@ -123,8 +123,8 @@ class BaseUserTestCase(unittest.TestCase):
                 f"{ENTRYPOINT}task", json=payload, headers=self.auth_headers
             )
             response.raise_for_status()
-            data = response.json()
-            self.test_task_id = data["id"]
+            return Task(**response.json())
+
         except requests.exceptions.HTTPError as exc:
             logger.error(exc)
 
@@ -145,6 +145,9 @@ class BaseUserTestCase(unittest.TestCase):
             response.raise_for_status()
             return Comment(**response.json())
         except requests.exceptions.HTTPError as exc:
+            logger.error(exc)
+        except Exception as exc:
+            print(exc)
             logger.error(exc)
 
     def _raise_if_invalid_user(self):
@@ -198,7 +201,7 @@ class BaseUserTestCase(unittest.TestCase):
         self._raise_if_invalid_user()
         try:
             data = {
-                "username": "testtt@gmail.com",
+                "username": "tester@gmail.com",
                 "password": "test",
             }
             response = requests.post(f"{ENTRYPOINT}auth/jwt/login", data=data)
@@ -217,8 +220,6 @@ class TestAdminPolicies(BaseUserTestCase):
         super().setUp()
         self._set_group_id(1)
         self._login()
-        self._create_test_task()
-        self._create_test_comment()
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -245,7 +246,6 @@ class TestAdminPolicies(BaseUserTestCase):
         if self.test_user is None:
             return
         self._raise_if_invalid_user()
-        self._create_test_task()
         task_id = self.test_task.id
         response = requests.delete(
             f"{ENTRYPOINT}tasks/{task_id}",
@@ -259,10 +259,8 @@ class TestAdminPolicies(BaseUserTestCase):
         if self.test_user is None:
             return
         self._raise_if_invalid_user()
-        test_comment = self._create_test_comment()
-        test_task = self._create_test_task()
         response = requests.delete(
-            f"{ENTRYPOINT}comments/{test_comment.id}?tasks_id={test_task.id}",
+            f"{ENTRYPOINT}comments/{self.test_comment.id}?tasks_id={self.test_task.id}",
             headers=self.auth_headers,
         )
         self.assertEqual(response.status_code, 200)
@@ -273,8 +271,6 @@ class TestAdminPolicies(BaseUserTestCase):
 class TestUserPolicies(BaseUserTestCase):
     def setUp(self) -> None:
         super().setUp()
-        self._create_test_task()
-        self._create_test_comment()
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -317,22 +313,30 @@ class TestUserPolicies(BaseUserTestCase):
             json={
                 "title": "title",
                 "description": "description",
-                "priority": "low",
+                "priority": "high",
                 "is_completed": "not_completed",
-                "created_at": "2023-11-10T09:23:06.698Z",
-                "updated_at": "2023-11-10T09:23:06.698Z",
-                "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "created_at": "2023-11-10T09:30:06.698Z",
+                "updated_at": "2023-11-10T09:30:06.698Z",
+                "user_id": self.test_user.id,
             },
         )
         self.assertEqual(response.status_code, 201)
         data = response.json()
         self.assertIsInstance(data, dict)
+        task_id = data.get("id")
+        response = requests.delete(
+            f"{ENTRYPOINT}tasks/{task_id}",
+            headers=self.auth_headers,
+        )
+        self.assertEqual(response.status_code, 200)
 
     def test_delete_comment_permissions(self):
         if self.test_user is None:
             return
         self._raise_if_invalid_user()
-        response = requests.delete(f"{ENTRYPOINT}comments/5", headers=self.auth_headers)
+        response = requests.delete(
+            f"{ENTRYPOINT}comments/{self.test_comment.id}", headers=self.auth_headers
+        )
         self.assertEqual(response.status_code, 404)
         data = response.json()
         self.assertIsInstance(data, dict)
