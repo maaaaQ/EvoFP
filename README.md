@@ -32,7 +32,7 @@ API Todoist предоставляет набор методов и эндпои
 
 - [PostgreSQL](https://www.postgresql.org/)
 
-♦ **[Брокер обмена сообщениями](https://github.com/maaaaQ/EvoFP#брокер-обмена-сообщениями)**
+**[Брокер обмена сообщениями](https://github.com/maaaaQ/EvoFP#брокер-обмена-сообщениями)**
 
 - [RabbitMQ](https://www.rabbitmq.com/)
 
@@ -41,3 +41,14 @@ API Todoist предоставляет набор методов и эндпои
 - ![Архитектура](https://github.com/maaaaQ/EvoFP/blob/developer/architecture.png)
 
 **[Развертывание](https://github.com/maaaaQ/EvoFP/tree/developer/deploy)**
+
+**[Поиск уязвимостей в исходном коде производится с помощью библиотеки Bandit](https://github.com/PyCQA/bandit)**
+
+- Необходимо перейти в корневой каталог (EvoFP)
+- Запустить проверку узвимостей командой
+
+---
+
+bandit -r .
+
+---
