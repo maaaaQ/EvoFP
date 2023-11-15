@@ -1,15 +1,20 @@
 import os
 import unittest
-
+from dotenv import find_dotenv, load_dotenv
 import jwt
 from starlette.requests import Request
 from starlette.datastructures import Headers
 from src.policies.requestenforcer import RequestEnforcer, Service, EnforceResult
 
+
+dotenv_path = find_dotenv(filename="../.env")
+
+load_dotenv(dotenv_path)
+
 TEST_POLICIES_CONFIG = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "test_policies.yaml"
 )
-TEST_JWT_SECRET = "572e6200-1a7a-4f61-9ac1-0f2c8220d8b8"
+TEST_JWT_SECRET = os.getenv("TEST_JWT_SECRET")
 
 USER_SERVICE = Service(
     name="user-service",

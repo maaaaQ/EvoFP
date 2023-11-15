@@ -1,7 +1,13 @@
+from src import config
+
+
+cfg: config.Config = config.load_config()
+
+
 class SecretProvider:
-    reset_password_token_secret = "reset_password_token_secret"
-    verification_token_secret = "verification_token_secret"
-    jwt_secret = "jwt_secret"
+    reset_password_token_secret = cfg.reset_password_token_secret
+    verification_token_secret = cfg.verification_token_secret
+    jwt_secret = cfg.jwt_secret
 
 
 secret_provider: SecretProvider = SecretProvider()
