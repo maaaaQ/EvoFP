@@ -32,7 +32,7 @@ services:
       - 5672:5672
       - 15672:15672
   postgresql:
-    image: postgres:15
+    image: postgres:15.5
     restart: always
     # volumes:
     #   - postgresql-data:/var/lib/postgresql/data
