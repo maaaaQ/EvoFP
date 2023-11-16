@@ -12,27 +12,25 @@
 
 Перед запуском сервиса необходимо установить зависимости из файла requirements.txt
 
+```
+pip install -r requirements.txt
+```
+
 # Путь до исполняемого файла
 
 EvoFP/services/tasks-service
 
 # Запуск
 
----
-
+```
 uvicorn app:app --reload
-
----
+```
 
 # Сборка образа
 
----
-
+```
 docker build -t tasks-service:crud .
-
----
-
-# После
+```
 
 # Конфигурация
 
