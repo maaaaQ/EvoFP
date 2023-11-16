@@ -1,10 +1,10 @@
 # В данной директории все необходимое для развертывания СУБД и сервисов
 
-♦ **[Содержание]**
+**Содержание**
 
 - [Запуск](https://github.com/maaaaQ/EvoFP/tree/developer/deploy#запуск)
 - [Остановка](https://github.com/maaaaQ/EvoFP/tree/developer/deploy#остановка)
-- [Проверка статусов](httpPostgreSQLQ/EvoFP/tree/developer/deploy#проверка-статусов)
+- [Проверка статусов сервисов](httpPostgreSQLQ/EvoFP/tree/developer/deploy#проверка-статусов-сервисов)
 - [PostgreSQL](https://github.com/maaaaQ/EvoFP/tree/developer/deploy#postgresql)
 
 ## Запуск
@@ -82,4 +82,4 @@ PGDATA: /var/lib/postgresql/data/db-files/
 
 Для тестирования подключения можно использовать утилиту psql или какой-либо GUI-клиент
 
-**_[Образ на Docker-Hub](https://hub.docker.com/_/postgres)\_**
+**[Образ на Docker-Hub](https://hub.docker.com/_/postgres)**
