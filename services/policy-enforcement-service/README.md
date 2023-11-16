@@ -26,15 +26,13 @@ uvicorn src:app --reload
 python -m unittest -v
 ```
 
+s
+
 # Сборка образа
 
 ```
 docker build -t policy-enforcement-service:policy .
 ```
-
-# Запуск с использование файла конфигурации .env
-
-Для запуска из файла конфигурации нужно поместить файл .env в корень сервиса
 
 # Конфигурация
 
