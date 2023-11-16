@@ -26,8 +26,6 @@ uvicorn src:app --reload
 python -m unittest -v
 ```
 
-s
-
 # Сборка образа
 
 ```
