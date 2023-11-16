@@ -8,25 +8,29 @@
 | /comments/{comments_id} |  PUT   | Обновляет комментарий по ID                  |
 | /comments/{comments_id} | DELETE | Удаляет выбранный комментарий                |
 
+# Зависимости
+
+Перед запуском сервиса необходимо установить зависимости из файла requirements.txt
+
+```
+pip install -r requirements.txt
+```
+
 # Путь до исполняемого файла
 
 EvoFP/services/comment-service
 
 # Запуск
 
----
-
+```
 uvicorn app:app --reload
-
----
+```
 
 # Сборка образа
 
----
-
+```
 docker build -t comment-service:comm .
-
----
+```
 
 # Конфигурация
 
