@@ -4,7 +4,7 @@
 
 - [Запуск](https://github.com/maaaaQ/EvoFP/tree/developer/deploy#запуск)
 - [Остановка](https://github.com/maaaaQ/EvoFP/tree/developer/deploy#остановка)
-- [Проверка статусов сервисов](httpPostgreSQLQ/EvoFP/tree/developer/deploy#проверка-статусов-сервисов)
+- [Проверка статусов сервисов](https://github.com/maaaaQ/EvoFP/tree/developer/deploy#%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D1%81%D1%82%D0%B0%D1%82%D1%83%D1%81%D0%BE%D0%B2-%D1%81%D0%B5%D1%80%D0%B2%D0%B8%D1%81%D0%BE%D0%B2)
 - [PostgreSQL](https://github.com/maaaaQ/EvoFP/tree/developer/deploy#postgresql)
 
 ## Запуск
