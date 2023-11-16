@@ -6,17 +6,25 @@
 
 Перед запуском сервиса необходимо установить зависимости из файла requirements.txt
 
+```
+pip install -r requirements.txt
+```
+
 # Путь до исполняемого файла
 
 EvoFP/services/user-service
 
 # Запуск
 
----
-
+```
 uvicorn src:app --reload
+```
 
----
+# Сборка образа
+
+```
+docker build -t user-service:user .
+```
 
 # Запуск с использование файла конфигурации .env
 
@@ -34,11 +42,3 @@ uvicorn src:app --reload
 # Документация
 
 После запуска доступна документация: http://127.0.0.1:8000/docs
-
-# Сборка образа
-
----
-
-docker build -t user-service:user .
-
----
