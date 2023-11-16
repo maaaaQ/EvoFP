@@ -52,3 +52,12 @@ API Todoist предоставляет набор методов и эндпои
 bandit -r .
 
 ---
+
+**[Поиск уязвимостей в docker образах производится с помощью Trivy](https://github.com/aquasecurity/trivy)**
+
+- Необходимо перейти в каталог (EvoFP/deploy)
+- Для поиска уязвимостей в docker образе tasks-service выполнить команду:
+
+```
+docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image deploy-tasks-service
+```
