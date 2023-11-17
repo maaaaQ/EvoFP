@@ -2,13 +2,13 @@
 
 **Структура репозитория**
 
-- services - содержит исходные коды сервисов системы
+- [services](https://github.com/maaaaQ/EvoFP/tree/developer/services) - содержит исходные коды сервисов системы
   - [tasks-service](https://github.com/maaaaQ/EvoFP/tree/developer/services/tasks-service) - сервис управления задачами
   - [comment-service](https://github.com/maaaaQ/EvoFP/tree/developer/services/comment-service) - сервис управления комментариями к задачам
   - [user-service](https://github.com/maaaaQ/EvoFP/tree/developer/services/user-service) - пользовательский сервис
   - [notification-service](https://github.com/maaaaQ/EvoFP/tree/developer/services/notification-service) - сервис отправки уведомлений о важных действиях
   - [policy-enforcement-service](https://github.com/maaaaQ/EvoFP/tree/developer/services/policy-enforcement-service) - сервис проверки полномочий
-- deploy - содержит все необходимое для развертывания СУБД и сервисов
+- [deploy](https://github.com/maaaaQ/EvoFP/tree/developer/deploy) - содержит все необходимое для развертывания СУБД и сервисов
 
 **Концепция**
 
@@ -39,9 +39,7 @@ API Todoist предлагает следующие возможности:
 
 **Архитектура проекта**
 
-- ![Архитектура](https://github.com/maaaaQ/EvoFP/blob/developer/architecture.png)
-
-**[Развертывание](https://github.com/maaaaQ/EvoFP/tree/developer/deploy)**
+![Архитектура](https://github.com/maaaaQ/EvoFP/blob/developer/architecture.png)
 
 **Поиск уязвимостей в исходном коде производится с помощью библиотеки [Bandit](https://github.com/PyCQA/bandit)**
 
