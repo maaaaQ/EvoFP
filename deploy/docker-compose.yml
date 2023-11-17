@@ -1,0 +1,145 @@
+version: "2.2"
+volumes:
+  postgresql-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./postgresql/data
+  policy-enforcement-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./policy-enforcement-service
+  user-service-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./user-service
+  e2e-test-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./e2e_test
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: rabbitmq
+    image: rabbitmq:3.12.8-management-alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
+  postgresql:
+    image: postgres:15.5
+    restart: always
+    # volumes:
+    #   - postgresql-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgresql7
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/db-files/
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "postgres"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+  policy-enforcement-service:
+    container_name: policy-enforcement-service
+    build:
+      context: ../services/policy-enforcement-service
+      dockerfile: ./Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - policy-enforcement-data:/mnt/
+    environment:
+      JWT_SECRET:
+      POLICIES_CONFIG_PATH:
+    depends_on:
+      - user-service
+      - tasks-service
+      - comment-service
+      - notification-service
+    env_file:
+      - .env
+  tasks-service:
+    container_name: tasks-service
+    build:
+      context: ../services/tasks-service
+      dockerfile: ./Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      POSTGRES_DSN:
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    env_file:
+      - .env
+  comment-service:
+    container_name: comment-service
+    build:
+      context: ../services/comment-service
+      dockerfile: ./Dockerfile
+    ports:
+      - "5002:5000"
+    environment:
+      POSTGRES_DSN:
+    env_file:
+      - .env
+    depends_on:
+      postgresql:
+        condition: service_healthy
+  user-service:
+    container_name: user-service
+    build:
+      context: ../services/user-service
+      dockerfile: ./Dockerfile
+    ports:
+      - "5003:5000"
+    environment:
+      POSTGRES_DSN: ${POSTGRES_DSN_ASYNC}
+      JWT_SECRET:
+      RESET_PASSWORD_TOKEN_SECRET:
+      VERIFICATION_TOKEN_SECRET:
+      DEFAULT_GROUPS_CONFIG_PATH:
+    volumes:
+      - user-service-data:/mnt/
+    env_file:
+      - .env
+    depends_on:
+      postgresql:
+        condition: service_healthy
+  notification-service:
+    container_name: notification-service
+    build:
+      context: ../services/notification-service
+      dockerfile: ./Dockerfile
+    ports:
+      - "5004:5000"
+    environment:
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      RABBIT: ${RABBIT}
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+  test-runner:
+    image: python:3.10
+    volumes:
+      - e2e-test-data:/mnt/
+    command: >
+      bash -c "pip install requests pydantic sqlalchemy psycopg2-binary
+      && python -m unittest /mnt/test.py"
+    depends_on:
+      - policy-enforcement-service

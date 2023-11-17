@@ -1,0 +1,43 @@
+services:
+  - name: tasks-service
+    entrypoint: http://127.0.0.1:8081/
+    inject_token_in_swagger: True
+  - name: comment-service
+    entrypoint: http://127.0.0.1:8082/
+    inject_token_in_swagger: True
+  - name: user-service
+    entrypoint: http://127.0.0.1:8000/
+    inject_token_in_swagger: True
+model: |
+  [request_definition]
+  r = sub, obj, act
+
+  [policy_definition]
+  p = sub_rule, obj, act
+
+  [policy_effect]
+  e = some(where (p.eft == allow))
+
+  [matchers]
+  m = eval(p.sub_rule) && keyMatch(r.obj, p.obj) && regexMatch(r.act, p.act)
+policies:
+  - service: tasks-service
+    rule: r.sub.group_id > 0
+    resource: /task
+    methods: (POST)
+  - service: tasks-service
+    rule: r.sub.group_id > 0
+    resource: /tasks
+    methods: (GET)
+  - service: tasks-service
+    rule: r.sub.group_id > 0
+    resource: /tasks/*
+    methods: (GET)|(PUT)|(DELETE)
+  - service: comment-service
+    rule: r.sub.group_id > 0
+    resource: /comments
+    methods: (GET)|(POST)
+  - service: user-service
+    resource: /auth/*
+    methods: (POST)
+    white_list: true
