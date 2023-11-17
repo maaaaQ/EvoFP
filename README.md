@@ -8,6 +8,7 @@
   - [user-service](https://github.com/maaaaQ/EvoFP/tree/developer/services/user-service) - пользовательский сервис
   - [notification-service](https://github.com/maaaaQ/EvoFP/tree/developer/services/notification-service) - сервис отправки уведомлений о важных действиях
   - [policy-enforcement-service](https://github.com/maaaaQ/EvoFP/tree/developer/services/policy-enforcement-service) - сервис проверки полномочий
+- deploy - содержит все необходимое для развертывания СУБД и сервисов
 
 **Концепция**
 
