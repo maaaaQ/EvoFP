@@ -9,27 +9,21 @@
 
 ## Запуск
 
----
-
+```
 docker-compose -p deploy up -d
-
----
+```
 
 # Остановка
 
----
-
+```
 docker-compose stop
-
----
+```
 
 # Проверка статусов сервисов
 
----
-
+```
 docker ps --all --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
----
+```
 
 # PostgreSQL
 
