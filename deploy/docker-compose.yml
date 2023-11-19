@@ -35,6 +35,7 @@ services:
   postgresql:
     image: postgres:15.5
     restart: always
+    # Uncomment, if required to use some specific PostgreSQL configuration
     # volumes:
     #   - postgresql-data:/var/lib/postgresql/data
     environment:
