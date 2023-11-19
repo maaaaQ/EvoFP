@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 # Путь до исполняемого файла
 
-EvoFP/services/user-service
+EvoFP/services/user-service/src
 
 # Запуск
 
