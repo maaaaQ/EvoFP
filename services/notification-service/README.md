@@ -1,7 +1,7 @@
 # API сервиса отправки email о создании пользователя/задачи/комментария к задаче
 
 <u>Сервис использует SSL протокол доставки сообщений, для обеспечения защищенной передачи данных в сети Интернет.
-Для использования нужно указать данные в [.env файле](https://github.com/maaaaQ/EvoFP/blob/developer/services/notification-service/.env) внутри сервиса и в [.env файле](https://github.com/maaaaQ/EvoFP/blob/developer/deploy/.env) внутри deploy. </u>
+Для использования нужно указать данные в</u> [.env файле](https://github.com/maaaaQ/EvoFP/blob/developer/services/notification-service/.env)<u> внутри сервиса и в </u>[.env файле](https://github.com/maaaaQ/EvoFP/blob/developer/deploy/.env) <u>внутри deploy.</u>
 
 ```
 SMTP_HOST = "параметр, который определяет адрес сервера SMTP для отправки электронной почты"
