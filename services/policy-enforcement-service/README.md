@@ -32,14 +32,6 @@ python -m unittest -v
 docker build -t policy-enforcement-service:policy .
 ```
 
-# Конфигурация
-
-| Переменная           |                        Назначение                        | Значение по-умолчанию                        |
-| :------------------- | :------------------------------------------------------: | -------------------------------------------- |
-| POSTGRES_DSN         |             Строка подключения к PostgreSQL              | postgresql://user:pass@localhost:5432/foobar |
-| JWT_SECRET           | Парольная фраза, используемая для кодирования jwt-токена | jwt_secret 5                                 |
-| POLICIES_CONFIG_PATH |                    Файл policies.yaml                    | policies.yaml                                |
-
 # Документация
 
 После запуска доступна документация: http://127.0.0.1:8000/docs
